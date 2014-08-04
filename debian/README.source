@@ -1,0 +1,46 @@
+Information about logstash-gelf
+-------------------------------
+
+Maven
+-----
+This Debian package was developed using the mh_make command
+from the maven-debian-helper package.
+
+However it deviates from Debian policy in order to allow online access
+exlusively to http://archive.wikimedia.org during the build.
+
+Unpackaged dependencies
+-----------------------
+This library requires the following dependencies which are not
+packaged for Debian. All are licensed Apache 2.0 except jedis which
+is MIT.
+
+com.google.code.tempus-fugit tempus-fugit
+io.netty netty-all
+org.apache.logging.log4j log4j-api
+org.apache.logging.log4j log4j-core
+org.apache.maven.doxia doxia-module-markdown
+org.apache.maven.plugins maven-assembly-plugin
+org.apache.maven.plugins maven-project-info-reports-plugin
+org.apache.maven.plugins maven-release-plugin
+redis.clients jedis
+
+Because these dependencies cannot be satisifed by Debs, they are
+retrieved from Archiva. For simplicity, all other dependencies
+are also retrieved from Archiva.
+
+Git-buildpackage
+----------------
+This package uses a version control system as described in
+http://wiki.debian.org/Java/JavaVcs and the pages linked from there.
+
+It contains the upstream source within the VCS upstream branch.
+Upstream versions are tagged as upstream/<version>
+
+Quilt
+-----
+This package uses quilt to manage all modifications to the upstream
+source.  Changes are stored in the source package as diffs in
+debian/patches and applied during the build.
+
+See /usr/share/doc/quilt/README.source for a detailed explanation.

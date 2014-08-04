@@ -1,0 +1,43 @@
+Source: logstash-gelf
+Section: java
+Priority: optional
+Maintainer: Jeff Gage <jgage@wikimedia.org>
+Build-Depends: debhelper (>= 9), default-jdk, javahelper, maven-debian-helper (>= 1.5), maven-repo-helper (>= 1.6~), redis-server
+Build-Depends-Indep: libmaven-dependency-plugin-java, libmaven-exec-plugin-java, libmaven-javadoc-plugin-java,
+ libmaven-project-info-reports-plugin-java, libmaven-scm-java, libjson-simple-java,
+ liblog4j1.2-java (>= 1.2.14), liblogback-java, libslf4j-java, junit4, default-jdk-doc,
+ libjson-simple-doc, liblog4j1.2-java-doc, liblogback-java-doc
+Standards-Version: 3.9.3
+Vcs-Git: https://github.com/mp911de/logstash-gelf.git
+Vcs-Browser: https://github.com/mp911de/logstash-gelf/
+Homepage: http://logging.paluch.biz/
+
+Package: liblogstash-gelf-java
+Architecture: all
+Depends: ${misc:Depends}, ${maven:Depends}
+Suggests: ${maven:OptionalDepends}, liblogstash-gelf-java-doc
+Description: Logstash logging connectors
+ Provides logging to Logstash using the Graylog Extended Logging Format (GELF)
+ for using with:
+  * Java Util Logging
+  * log4j 1.2.x
+  * log4j 2.x
+  * JBoss AS7/Wildfly (JBoss AS8) (mix of Java Util Logging with log4j MDC)
+  * Logback
+
+Package: liblogstash-gelf-java-doc
+Architecture: all
+Section: doc
+Depends: ${misc:Depends}, ${maven:DocDepends}
+Recommends: ${maven:DocOptionalDepends}
+Suggests: liblogstash-gelf-java
+Description: Documentation for Logstash logging connectors
+ Provides logging to Logstash using the Graylog Extended Logging Format (GELF)
+ for using with:
+  * Java Util Logging
+  * log4j 1.2.x
+  * log4j 2.x
+  * JBoss AS7/Wildfly (JBoss AS8) (mix of Java Util Logging with log4j MDC)
+  * Logback
+ .
+ This package contains the API documentation of liblogstash-gelf-java.

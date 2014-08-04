@@ -1,0 +1,13 @@
+Description: Don't clean during testing because it removes the jar we just built
+Last-Update: 2014-07-31
+--- a/Makefile
++++ b/Makefile
+@@ -37,7 +37,7 @@ test-coveralls:
+ test:
+ 	make start
+ 	sleep 2
+-	mvn -B -Dtest.withRedis=true clean compile test
++	mvn -B -Dtest.withRedis=true compile test
+ 	make stop
+ 
+ travis-install:

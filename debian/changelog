@@ -1,0 +1,12 @@
+logstash-gelf (1.5.1-1wmf1) precise; urgency=medium
+
+  * Initial release
+  * Debian package for logstash-gelf.jar: liblogstash-gelf-java
+  * Provides logging to Logstash using GELF via JUL, Log4j, etc.
+  * https://github.com/mp911de/logstash-gelf
+  * Uses git-buildpackage, pristine-tar, maven-repo-helper, quilt
+  * Satisfies dependencies using archiva.wikimedia.org
+  * Passes Lintian and Piuparts
+  * Resulting jar compares as expected to the version in Maven Central
+
+ -- Jeff Gage <jgage@wikimedia.org>  Thu, 31 Jul 2014 13:08:24 -0400

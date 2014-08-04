@@ -1,0 +1,82 @@
+Description: Disable Maven Central, allow access only to archiva.wikimedia.org
+Last-Update: 2014-07-29
+--- a/pom.xml
++++ b/pom.xml
+@@ -323,4 +323,77 @@
+             </plugin>
+         </plugins>
+     </reporting>
++    <repositories>
++        <!-- disable Maven central -->
++        <repository>
++            <id>central</id>
++            <url>http://repo1.maven.org/maven2</url>
++            <releases>
++                <enabled>false</enabled>
++            </releases>
++            <snapshots>
++                <enabled>false</enabled>
++            </snapshots>
++        </repository>
++
++        <!-- Repository information for archiva.wikimedia.org. -->
++        <repository>
++            <id>wikimedia.mirrored</id>
++            <name>Wikimedia Mirrored Repository</name>
++            <url>http://archiva.wikimedia.org/repository/mirrored</url>
++            <releases>
++                <enabled>true</enabled>
++                <checksumPolicy>fail</checksumPolicy>
++            </releases>
++            <snapshots>
++                <enabled>false</enabled>
++            </snapshots>
++        </repository>
++
++        <repository>
++            <id>wikimedia.releases</id>
++            <name>Wikimedia Release Repository</name>
++            <url>http://archiva.wikimedia.org/repository/releases</url>
++            <releases>
++                <enabled>true</enabled>
++                <checksumPolicy>fail</checksumPolicy>
++            </releases>
++            <snapshots>
++                <enabled>false</enabled>
++            </snapshots>
++        </repository>
++
++        <repository>
++            <id>wikimedia.snaphots</id>
++            <name>Wikimedia Snapshot Repository</name>
++            <url>http://archiva.wikimedia.org/repository/snapshots</url>
++            <releases>
++                <enabled>false</enabled>
++            </releases>
++            <snapshots>
++                <enabled>true</enabled>
++                <checksumPolicy>fail</checksumPolicy>
++            </snapshots>
++        </repository>
++    </repositories>
++
++    <pluginRepositories>
++        <!-- disable Maven central -->
++        <pluginRepository>
++            <id>central</id>
++            <url>http://repo1.maven.org/maven2</url>
++            <releases>
++                <enabled>false</enabled>
++            </releases>
++            <snapshots>
++                <enabled>false</enabled>
++            </snapshots>
++        </pluginRepository>
++
++        <pluginRepository>
++            <id>wikimedia.mirrored</id>
++            <name>Wikimedia Mirrored Repository</name>
++            <url>http://archiva.wikimedia.org/repository/mirrored/</url>
++        </pluginRepository>
++    </pluginRepositories>
+ </project>

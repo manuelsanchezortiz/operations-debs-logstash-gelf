@@ -1,0 +1,14 @@
+Description: Make Redis config compatible with Redis 2.2 as shipped in Ubuntu 12.04
+Last-Update: 2014-07-31
+--- a/Makefile
++++ b/Makefile
+@@ -5,9 +5,7 @@ daemonize yes
+ port 6479
+ pidfile work/redis1-6479.pid
+ logfile work/redis1-6479.log
+-save ""
+ appendonly no
+-client-output-buffer-limit pubsub 256k 128k 5
+ endef
+ 
+ export REDIS1_CONF

@@ -1,0 +1,4 @@
+no-clean-during-test
+downgrade-redis
+downgrade-publisher
+use-wmf-archiva

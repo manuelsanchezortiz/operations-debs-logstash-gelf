@@ -1,0 +1,16 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: logstash logging connectors
+Source: https://github.com/mp911de/logstash-gelf/
+
+Files: *
+Copyright: 2013-2014, Mark Paluch <mpaluch@paluch.biz>
+License: MIT
+
+Files: debian/*
+Copyright: 2014, Jeff Gage <jgage@wikimedia.org>
+License: MIT
+
+License: MIT
+  TODO: include the full text of the license here
+
+

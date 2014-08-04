@@ -1,0 +1,5 @@
+# watch control file: see uscan(1)
+version=3
+
+# https://wiki.debian.org/debian/watch/#GitHub
+https://github.com/mp911de/logstash-gelf/tags (?:.*/)?logstash-gelf-(\d[\d\.]*)\.tar\.gz
