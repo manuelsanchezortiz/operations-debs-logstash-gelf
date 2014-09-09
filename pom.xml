@@ -9,7 +9,7 @@
     </parent>
 
     <groupId>biz.paluch.logging</groupId>
-    <version>1.5.1</version>
+    <version>1.5.3</version>
     <artifactId>logstash-gelf</artifactId>
 
     <name>logstash logging connectors</name>
@@ -20,7 +20,7 @@
         <connection>scm:git://github.com/mp911de/logstash-gelf.git</connection>
         <developerConnection>scm:git:git@github.com:mp911de/logstash-gelf.git</developerConnection>
         <url>http://github.com/mp911de/logstash-gelf/</url>
-        <tag>logstash-gelf-1.5.1</tag>
+        <tag>logstash-gelf-1.5.3</tag>
     </scm>
 
     <issueManagement>
@@ -47,7 +47,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.target>1.6</maven.compiler.target>
         <maven.compiler.source>1.6</maven.compiler.source>
-        <logstash-gelf-release-version>1.5.1</logstash-gelf-release-version>
+        <logstash-gelf-release-version>1.5.3</logstash-gelf-release-version>
 
         <github.site.upload.skip>true</github.site.upload.skip>
         <test.withRedis>false</test.withRedis>
