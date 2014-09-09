@@ -1,20 +1,20 @@
 package biz.paluch.logging.gelf;
 
-import biz.paluch.logging.gelf.intern.Closer;
+import static biz.paluch.logging.RuntimeContainerProperties.getProperty;
+import static java.lang.Boolean.getBoolean;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+
+import biz.paluch.logging.gelf.intern.Closer;
 
 /**
  * Field with reference to the log event.
  */
 public class LogMessageField implements MessageField {
 
+    public static final String VERBOSE_LOGGING_PROPERTY = "logstash-gelf.LogMessageField.verbose";
     private static final String DEFAULT_MAPPING = "default-logstash-fields.properties";
 
     /**
@@ -64,33 +64,40 @@ public class LogMessageField implements MessageField {
     }
 
     public static List<LogMessageField> getDefaultMapping(NamedLogField... supportedFields) {
+        return getDefaultMapping(true, supportedFields);
+    }
+
+    public static List<LogMessageField> getDefaultMapping(boolean readFromDefaultsFile, NamedLogField... supportedFields) {
 
         List<LogMessageField> result = new ArrayList<LogMessageField>();
         List<NamedLogField> supportedLogFields = Arrays.asList(supportedFields);
-        InputStream is = null;
-        try {
-            is = getStream();
 
-            if (is == null) {
-                System.out.println("No " + DEFAULT_MAPPING + " resource present, using defaults");
-            } else {
-                Properties p = new Properties();
-                p.load(is);
+        if (readFromDefaultsFile) {
+            InputStream is = null;
 
-                if (!p.isEmpty()) {
-                    loadFields(p, result, supportedLogFields);
+            try {
+                is = getStream();
+
+                if (is == null) {
+                    verboseLog("No " + DEFAULT_MAPPING + " resource present, using defaults");
+                } else {
+                    Properties p = new Properties();
+                    p.load(is);
+
+                    if (!p.isEmpty()) {
+                        loadFields(p, result, supportedLogFields);
+                    }
                 }
-
+            } catch (IOException e) {
+                verboseLog("Could not parse " + DEFAULT_MAPPING + " resource, using defaults: " + e.getMessage());
+            } finally {
+                Closer.close(is);
             }
-
-        } catch (IOException e) {
-            System.out.println("Could not parse " + DEFAULT_MAPPING + " resource, using defaults");
-        } finally {
-            Closer.close(is);
         }
 
         if (result.isEmpty()) {
 
+            verboseLog("Default mapping is empty. Using " + NamedLogField.class.getName() + " fields");
             for (NamedLogField namedLogField : NamedLogField.values()) {
                 if (supportedLogFields.contains(namedLogField)) {
                     result.add(new LogMessageField(namedLogField.fieldName, namedLogField));
@@ -98,7 +105,15 @@ public class LogMessageField implements MessageField {
             }
         }
 
+        verboseLog("Default field mapping: " + result);
+
         return result;
+    }
+
+    private static void verboseLog(String message) {
+        if (getBoolean(getProperty(VERBOSE_LOGGING_PROPERTY, "false"))) {
+            System.out.println(message);
+        }
     }
 
     private static void loadFields(Properties p, List<LogMessageField> result, List<NamedLogField> supportedLogFields) {

@@ -3,7 +3,7 @@ package biz.paluch.logging;
 /**
  * Collection of property names in order to control host name/host name resolution.
  * 
- * @author <a href="mailto:mark.paluch@1und1.de">Mark Paluch</a>
+ * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
  * @since 11.04.14 12:30
  */
 public class RuntimeContainerProperties {
@@ -42,5 +42,20 @@ public class RuntimeContainerProperties {
 
     private RuntimeContainerProperties() {
 
+    }
+
+    /**
+     * Lookup property from ({@link System#getenv(String)} and {@link System#getProperty(String)} as fallback.
+     * 
+     * @param key
+     * @param defaultValue
+     * @return
+     */
+    public static String getProperty(String key, String defaultValue) {
+        String env = System.getenv(key);
+        if (env != null && !"".equals(env)) {
+            return env;
+        }
+        return System.getProperty(key, defaultValue);
     }
 }
