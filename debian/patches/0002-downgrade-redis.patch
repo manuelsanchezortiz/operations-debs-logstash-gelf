@@ -1,5 +1,13 @@
-Description: Make Redis config compatible with Redis 2.2 as shipped in Ubuntu 12.04
-Last-Update: 2014-07-31
+From: Jeff Gage <jgage@wikimedia.org>
+Date: Tue, 9 Sep 2014 04:40:42 -0400
+Subject: downgrade-redis
+
+---
+ Makefile |    2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 5724928..a1c21e0 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -5,9 +5,7 @@ daemonize yes
@@ -12,3 +20,4 @@ Last-Update: 2014-07-31
  endef
  
  export REDIS1_CONF
+-- 

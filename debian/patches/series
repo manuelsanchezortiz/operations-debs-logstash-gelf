@@ -1,4 +1,4 @@
-no-clean-during-test
-downgrade-redis
-downgrade-publisher
-use-wmf-archiva
+0001-no-clean-during-test.patch
+0002-downgrade-redis.patch
+0003-downgrade-publisher.patch
+0004-use-wmf-archiva.patch

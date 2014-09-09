@@ -1,3 +1,10 @@
+logstash-gelf (1.5.3-1wmf1) precise; urgency=medium
+
+  * Imported Upstream version 1.5.3
+  * Rebased patches
+
+ -- Jeff Gage <jgage@wikimedia.org>  Tue, 09 Sep 2014 04:48:24 -0400
+
 logstash-gelf (1.5.1-1wmf1) precise; urgency=medium
 
   * Initial release

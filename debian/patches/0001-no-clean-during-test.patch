@@ -1,0 +1,22 @@
+From: Jeff Gage <jgage@wikimedia.org>
+Date: Tue, 9 Sep 2014 04:40:42 -0400
+Subject: no-clean-during-test
+
+---
+ Makefile |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index d756d13..5724928 100644
+--- a/Makefile
++++ b/Makefile
+@@ -37,7 +37,7 @@ test-coveralls:
+ test:
+ 	make start
+ 	sleep 2
+-	mvn -B -Dtest.withRedis=true clean compile test
++	mvn -B -Dtest.withRedis=true compile test
+ 	make stop
+ 
+ travis-install:
+-- 

@@ -1,8 +1,16 @@
-Description: Disable Maven Central, allow access only to archiva.wikimedia.org
-Last-Update: 2014-07-29
+From: Jeff Gage <jgage@wikimedia.org>
+Date: Tue, 9 Sep 2014 04:40:42 -0400
+Subject: use-wmf-archiva
+
+---
+ pom.xml |   73 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 73 insertions(+)
+
+diff --git a/pom.xml b/pom.xml
+index 14b6d62..23368e1 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -323,4 +323,77 @@
+@@ -331,4 +331,77 @@
              </plugin>
          </plugins>
      </reporting>
@@ -80,3 +88,4 @@ Last-Update: 2014-07-29
 +        </pluginRepository>
 +    </pluginRepositories>
  </project>
+-- 

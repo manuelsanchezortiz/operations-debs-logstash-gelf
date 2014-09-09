@@ -1,8 +1,16 @@
-Description: Downgrade maven-scm-publish-plugin to build with Maven 2
-Last-Update: 2014-07-29
+From: Jeff Gage <jgage@wikimedia.org>
+Date: Tue, 9 Sep 2014 04:40:42 -0400
+Subject: downgrade-publisher
+
+---
+ pom.xml |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 0d8f0dc..14b6d62 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -72,7 +72,7 @@
+@@ -73,7 +73,7 @@
          <coveralls-maven-plugin.version>2.2.0</coveralls-maven-plugin.version>
          <maven-release-plugin.version>2.5</maven-release-plugin.version>
          <netty-all.version>4.0.12.Final</netty-all.version>
@@ -11,10 +19,11 @@ Last-Update: 2014-07-29
          <tempus-fugit.version>1.1</tempus-fugit.version>
          <maven-dependency-plugin.version>2.8</maven-dependency-plugin.version>
          <maven-assembly-plugin.version>2.2-beta-5</maven-assembly-plugin.version>
-@@ -323,4 +323,4 @@
+@@ -331,4 +331,4 @@
              </plugin>
          </plugins>
      </reporting>
 -</project>
 \ No newline at end of file
 +</project>
+-- 
