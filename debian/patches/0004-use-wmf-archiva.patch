@@ -6,14 +6,12 @@ Subject: use-wmf-archiva
  pom.xml |   73 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 73 insertions(+)
 
-diff --git a/pom.xml b/pom.xml
-index 14b6d62..23368e1 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -331,4 +331,77 @@
-             </plugin>
+@@ -408,6 +408,80 @@
          </plugins>
      </reporting>
+ 
 +    <repositories>
 +        <!-- disable Maven central -->
 +        <repository>
@@ -87,5 +85,7 @@ index 14b6d62..23368e1 100644
 +            <url>https://archiva.wikimedia.org/repository/mirrored/</url>
 +        </pluginRepository>
 +    </pluginRepositories>
- </project>
--- 
++
+     <profiles>
+         <profile>
+             <id>coverage</id>

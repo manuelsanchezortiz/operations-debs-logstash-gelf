@@ -6,8 +6,6 @@ Subject: downgrade-redis
  Makefile |    2 --
  1 file changed, 2 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 5724928..a1c21e0 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -5,9 +5,7 @@ daemonize yes
@@ -19,5 +17,4 @@ index 5724928..a1c21e0 100644
 -client-output-buffer-limit pubsub 256k 128k 5
  endef
  
- export REDIS1_CONF
--- 
+ # SENTINELS

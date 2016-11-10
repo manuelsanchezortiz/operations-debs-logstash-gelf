@@ -6,17 +6,14 @@ Subject: no-clean-during-test
  Makefile |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Makefile b/Makefile
-index d756d13..5724928 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -37,7 +37,7 @@ test-coveralls:
+@@ -46,7 +46,7 @@ stop:
  test:
  	make start
  	sleep 2
--	mvn -B -Dtest.withRedis=true clean compile test
-+	mvn -B -Dtest.withRedis=true compile test
+-	./mvnw -B -Dtest.withRedis=true clean verify
++	mvn -B -Dtest.withRedis=true verify
  	make stop
  
  travis-install:
--- 

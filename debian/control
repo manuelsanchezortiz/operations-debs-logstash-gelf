@@ -2,7 +2,7 @@ Source: logstash-gelf
 Section: java
 Priority: optional
 Maintainer: Jeff Gage <jgage@wikimedia.org>
-Build-Depends: debhelper (>= 9), default-jdk, javahelper, maven-debian-helper (>= 1.5), maven-repo-helper (>= 1.6~), redis-server
+Build-Depends: debhelper (>= 9), default-jdk, javahelper, maven-debian-helper (>= 2), maven-repo-helper (>= 1.6~), redis-server
 Build-Depends-Indep: libmaven-dependency-plugin-java, libmaven-exec-plugin-java, libmaven-javadoc-plugin-java,
  libmaven-project-info-reports-plugin-java, libmaven-scm-java, libjson-simple-java,
  liblog4j1.2-java (>= 1.2.14), liblogback-java, libslf4j-java, junit4, default-jdk-doc,
