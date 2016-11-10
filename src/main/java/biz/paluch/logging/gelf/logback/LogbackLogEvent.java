@@ -1,5 +1,9 @@
 package biz.paluch.logging.gelf.logback;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import biz.paluch.logging.gelf.DynamicMdcMessageField;
 import biz.paluch.logging.gelf.GelfUtil;
 import biz.paluch.logging.gelf.LogEvent;
@@ -7,14 +11,11 @@ import biz.paluch.logging.gelf.LogMessageField;
 import biz.paluch.logging.gelf.MdcMessageField;
 import biz.paluch.logging.gelf.MessageField;
 import biz.paluch.logging.gelf.Values;
+import biz.paluch.logging.gelf.intern.GelfMessage;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.ThrowableProxy;
-
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author <a href="mailto:tobiassebastian.kaefer@1und1.de">Tobias Kaefer</a>
@@ -57,13 +58,13 @@ class LogbackLogEvent implements LogEvent {
 
     @Override
     public String getSyslogLevel() {
-        return levelToSyslogLevel(loggingEvent.getLevel());
+        return "" + levelToSyslogLevel(loggingEvent.getLevel());
     }
 
     public String getSourceClassName() {
         StackTraceElement calleeStackTraceElement = getCalleeStackTraceElement();
         if (null == calleeStackTraceElement) {
-            return "";
+            return null;
         }
 
         return calleeStackTraceElement.getClassName();
@@ -72,7 +73,7 @@ class LogbackLogEvent implements LogEvent {
     private StackTraceElement getCalleeStackTraceElement() {
         StackTraceElement[] callerData = loggingEvent.getCallerData();
 
-        if (null != callerData) {
+        if (null != callerData && callerData.length > 0) {
             return callerData[0];
         } else {
             return null;
@@ -82,26 +83,46 @@ class LogbackLogEvent implements LogEvent {
     public String getSourceMethodName() {
         StackTraceElement calleeStackTraceElement = getCalleeStackTraceElement();
         if (null == calleeStackTraceElement) {
-            return "";
+            return null;
         }
 
         return calleeStackTraceElement.getMethodName();
     }
 
-    private String levelToSyslogLevel(final Level level) {
-        String result = "7";
+    public String getSourceLine() {
+        StackTraceElement calleeStackTraceElement = getCalleeStackTraceElement();
+        if (null == calleeStackTraceElement) {
+            return null;
+        }
+
+        return "" + calleeStackTraceElement.getLineNumber();
+    }
+
+    private int levelToSyslogLevel(final Level level) {
 
         int intLevel = level.toInt();
-        if (intLevel > Level.ERROR_INT) {
-            result = "2";
-        } else if (intLevel == Level.ERROR_INT) {
-            result = "3";
-        } else if (intLevel == Level.WARN_INT) {
-            result = "4";
-        } else if (intLevel == Level.INFO_INT) {
-            result = "6";
+
+        if (intLevel <= Level.DEBUG_INT) {
+            return GelfMessage.DEFAUL_LEVEL;
         }
-        return result;
+
+        if (intLevel <= Level.INFO_INT) {
+            return 6;
+        }
+
+        if (intLevel <= Level.WARN_INT) {
+            return 4;
+        }
+
+        if (intLevel <= Level.ERROR_INT) {
+            return 3;
+        }
+
+        if (intLevel < Level.ERROR_INT) {
+            return 2;
+        }
+
+        return GelfMessage.DEFAUL_LEVEL;
     }
 
     @Override
@@ -132,7 +153,13 @@ class LogbackLogEvent implements LogEvent {
                 return getSourceClassName();
             case SourceMethodName:
                 return getSourceMethodName();
+            case SourceLineNumber:
+                return getSourceLine();
             case SourceSimpleClassName:
+                String sourceClassName = getSourceClassName();
+                if (sourceClassName == null) {
+                    return null;
+                }
                 return GelfUtil.getSimpleClassName(getSourceClassName());
             case LoggerName:
                 return loggingEvent.getLoggerName();

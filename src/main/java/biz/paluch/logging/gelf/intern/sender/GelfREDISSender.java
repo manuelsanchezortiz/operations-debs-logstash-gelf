@@ -1,22 +1,29 @@
 package biz.paluch.logging.gelf.intern.sender;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Set;
+import java.util.WeakHashMap;
+
 import biz.paluch.logging.gelf.intern.ErrorReporter;
 import biz.paluch.logging.gelf.intern.GelfMessage;
 import biz.paluch.logging.gelf.intern.GelfSender;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-
-import java.io.IOException;
+import redis.clients.util.Pool;
 
 /**
- * (c) https://github.com/strima/logstash-gelf.git
+ * @author https://github.com/strima/logstash-gelf.git
+ * @author Mark Paluch
+ * @since 1.5
  */
-public class GelfREDISSender implements GelfSender {
-    private JedisPool jedisPool;
-    private ErrorReporter errorReporter;
-    private String redisKey;
+public class GelfREDISSender<T> implements GelfSender {
 
-    public GelfREDISSender(JedisPool jedisPool, String redisKey, ErrorReporter errorReporter) throws IOException {
+    private final Pool<Jedis> jedisPool;
+    private final ErrorReporter errorReporter;
+    private final String redisKey;
+    private final Set<Thread> callers = Collections.newSetFromMap(new WeakHashMap<Thread, Boolean>());
+
+    public GelfREDISSender(Pool<Jedis> jedisPool, String redisKey, ErrorReporter errorReporter) throws IOException {
         this.jedisPool = jedisPool;
         this.errorReporter = errorReporter;
         this.redisKey = redisKey;
@@ -24,6 +31,19 @@ public class GelfREDISSender implements GelfSender {
 
     public boolean sendMessage(GelfMessage message) {
 
+        // prevent recursive self calls caused by the Redis driver since it
+        if (!callers.add(Thread.currentThread())) {
+            return false;
+        }
+
+        try {
+            return sendMessage0(message);
+        } finally {
+            callers.remove(Thread.currentThread());
+        }
+    }
+
+    protected boolean sendMessage0(GelfMessage message) {
         Jedis jedisClient = null;
         try {
             jedisClient = jedisPool.getResource();
@@ -40,6 +60,6 @@ public class GelfREDISSender implements GelfSender {
     }
 
     public void close() {
-        // We don't need anything -> we use a pool!
+        callers.clear();
     }
 }

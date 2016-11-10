@@ -1,5 +1,5 @@
-Hostname-Lookup
---------------
+# Hostname-Lookup
+
 logstash-gelf contains a class (biz.paluch.logging.RuntimeContainer) which performs a hostname resolution on the first use of the framework.
 This can take some time, especially, when your DNS is not set up for all host addresses.
 
@@ -19,8 +19,8 @@ Controlling lookup order
 -------------------------
 You can provide a system property, `logstash-gelf.resolutionOrder` to control the lookup order.
  
-* Use `localhost,network` for: First inspect the local host name, then try to get the host name from network devices. 
-* Use `network,localhost` for: First inspect the network devices to retrieve a host name, then try to get the host name from the local host.
+* Use `localhost,network` for: First inspect the localhost name, then try to get the host name from network devices. 
+* Use `network,localhost` for: First inspect the network devices to retrieve a hos name, then try to get the hostname from the localhost (default).
 
 Bypassing Hostname-Lookup
 -------------------------

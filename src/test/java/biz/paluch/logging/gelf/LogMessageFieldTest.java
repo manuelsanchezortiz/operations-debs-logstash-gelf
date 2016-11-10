@@ -5,6 +5,9 @@ import org.junit.Test;
 
 import java.util.List;
 
+/**
+ * @author Mark Paluch
+ */
 public class LogMessageFieldTest {
 
     @Test

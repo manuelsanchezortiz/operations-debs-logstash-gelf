@@ -1,13 +1,13 @@
 package biz.paluch.logging.gelf;
 
-import biz.paluch.logging.gelf.intern.GelfMessage;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import biz.paluch.logging.gelf.intern.GelfMessage;
+
 /**
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * @author Mark Paluch
  * @since 17.09.13 10:47
  */
 public class GelfUtil {
@@ -27,25 +27,18 @@ public class GelfUtil {
     public static final String MDC_REQUEST_DURATION = "profiling.requestDuration";
 
     public static final String MDC_REQUEST_DURATION_MILLIS = "profiling.requestDuration.millis";
-
+    
     private GelfUtil() {
 
     }
 
     public static void addMdcProfiling(LogEvent logEvent, GelfMessage gelfMessage) {
-        Object requestStartMs = logEvent.getMdcValue(MDC_REQUEST_START_MS);
-        long timestamp = -1;
+        
+		String requestStartMs = logEvent.getMdcValue(MDC_REQUEST_START_MS);
+        long timestamp;
 
-        if (requestStartMs instanceof Long) {
-            timestamp = ((Long) requestStartMs).longValue();
-        }
-
-        if (timestamp == -1 && requestStartMs instanceof String) {
-            String requestStartMsString = (String) requestStartMs;
-            if (requestStartMsString.length() == 0) {
-                return;
-            }
-            timestamp = Long.parseLong(requestStartMsString);
+        if (requestStartMs != null && !requestStartMs.isEmpty()) {
+            timestamp = Long.parseLong(requestStartMs);
         } else {
             return;
         }
@@ -93,4 +86,5 @@ public class GelfUtil {
         }
         return matchingMdcNames;
     }
+
 }

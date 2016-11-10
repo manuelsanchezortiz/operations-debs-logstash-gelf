@@ -1,32 +1,37 @@
 package biz.paluch.logging.gelf.log4j2;
 
 import static org.junit.Assert.assertEquals;
-import biz.paluch.logging.RuntimeContainer;
-import biz.paluch.logging.gelf.GelfTestSender;
-import biz.paluch.logging.gelf.NettyLocalServer;
-import biz.paluch.logging.gelf.intern.GelfMessage;
-import com.google.code.tempusfugit.temporal.Condition;
-import com.google.code.tempusfugit.temporal.Duration;
-import com.google.code.tempusfugit.temporal.Timeout;
-import com.google.code.tempusfugit.temporal.WaitFor;
-import io.netty.channel.socket.nio.NioDatagramChannel;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.ConfigurationFactory;
-import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.List;
-import java.util.concurrent.TimeoutException;
+import com.google.code.tempusfugit.temporal.Condition;
+import com.google.code.tempusfugit.temporal.Duration;
+import com.google.code.tempusfugit.temporal.Timeout;
+import com.google.code.tempusfugit.temporal.WaitFor;
+
+import biz.paluch.logging.RuntimeContainer;
+import biz.paluch.logging.gelf.GelfTestSender;
+import biz.paluch.logging.gelf.NettyLocalServer;
+import biz.paluch.logging.gelf.intern.GelfMessage;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 
 /**
+ * @author Mark Paluch
  */
 public class GelfLogAppenderNettyUdpTest {
+
     public static final String LOG_MESSAGE = "foo bar test log message";
     public static final String EXPECTED_LOG_MESSAGE = LOG_MESSAGE;
 
@@ -35,7 +40,7 @@ public class GelfLogAppenderNettyUdpTest {
 
     @BeforeClass
     public static void setupClass() throws Exception {
-        System.setProperty(ConfigurationFactory.CONFIGURATION_FILE_PROPERTY, "log4j2-netty.xml");
+        System.setProperty(ConfigurationFactory.CONFIGURATION_FILE_PROPERTY, "log4j2/log4j2-netty-udp.xml");
         loggerContext = (LoggerContext) LogManager.getContext(false);
         loggerContext.reconfigure();
         server.run();
@@ -68,7 +73,7 @@ public class GelfLogAppenderNettyUdpTest {
         List jsonValues = server.getJsonValues();
         assertEquals(1, jsonValues.size());
 
-        JSONObject jsonValue = (JSONObject) jsonValues.get(0);
+        Map<String, Object> jsonValue = (Map<String, Object>) jsonValues.get(0);
 
         assertEquals(RuntimeContainer.FQDN_HOSTNAME, jsonValue.get(GelfMessage.FIELD_HOST));
         assertEquals(RuntimeContainer.HOSTNAME, jsonValue.get("_server.simple"));
@@ -88,6 +93,7 @@ public class GelfLogAppenderNettyUdpTest {
         assertEquals("logstash-gelf", jsonValue.get(GelfMessage.FIELD_FACILITY));
         assertEquals("fieldValue1", jsonValue.get("_fieldName1"));
         assertEquals("fieldValue2", jsonValue.get("_fieldName2"));
+        assertEquals(GelfMessage.DEFAULT_FACILITY, jsonValue.get("facility"));
 
     }
 
@@ -127,7 +133,7 @@ public class GelfLogAppenderNettyUdpTest {
         List jsonValues = server.getJsonValues();
         assertEquals(1, jsonValues.size());
 
-        JSONObject jsonValue = (JSONObject) jsonValues.get(0);
+        Map<String, Object> jsonValue = (Map<String, Object>) jsonValues.get(0);
 
         assertEquals(RuntimeContainer.ADDRESS, jsonValue.get("_server.addr"));
 
@@ -136,7 +142,5 @@ public class GelfLogAppenderNettyUdpTest {
         String shortMessage = builder.substring(0, 249);
         assertEquals(builder.toString(), jsonValue.get("full_message"));
         assertEquals(shortMessage, jsonValue.get("short_message"));
-
     }
-
 }

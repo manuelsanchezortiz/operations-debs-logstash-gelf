@@ -6,8 +6,13 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import biz.paluch.logging.gelf.GelfMessageAssembler;
-import biz.paluch.logging.gelf.intern.*;
+
+import java.util.logging.ErrorManager;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,15 +20,23 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.logging.ErrorManager;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
+import biz.paluch.logging.gelf.GelfMessageAssembler;
+import biz.paluch.logging.gelf.intern.GelfMessage;
+import biz.paluch.logging.gelf.intern.GelfSender;
+import biz.paluch.logging.gelf.intern.GelfSenderConfiguration;
+import biz.paluch.logging.gelf.intern.GelfSenderFactory;
+import biz.paluch.logging.gelf.intern.GelfSenderProvider;
 
+/**
+ * @author Mark Paluch
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class GelfLogHandlerErrorsTest {
-    public static final String THE_HOST = "the host";
+
+	public static final String THE_HOST = "the host";
     public static final LogRecord MESSAGE = new LogRecord(Level.INFO, "message");
-    @Mock
+
+	@Mock
     private ErrorManager errorManager;
 
     @Mock
@@ -85,4 +98,5 @@ public class GelfLogHandlerErrorsTest {
 
         verify(errorManager, atLeast(1)).error(anyString(), any(IllegalStateException.class), anyInt());
     }
+
 }

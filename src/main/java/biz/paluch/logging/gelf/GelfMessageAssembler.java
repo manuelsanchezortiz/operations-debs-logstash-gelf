@@ -1,10 +1,6 @@
 package biz.paluch.logging.gelf;
 
 import static biz.paluch.logging.gelf.GelfMessageBuilder.newInstance;
-import biz.paluch.logging.RuntimeContainer;
-import biz.paluch.logging.StackTraceFilter;
-import biz.paluch.logging.gelf.intern.GelfMessage;
-import biz.paluch.logging.gelf.intern.HostAndPortProvider;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -12,20 +8,39 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import biz.paluch.logging.RuntimeContainer;
+import biz.paluch.logging.RuntimeContainerProperties;
+import biz.paluch.logging.StackTraceFilter;
+import biz.paluch.logging.gelf.intern.GelfMessage;
+import biz.paluch.logging.gelf.intern.HostAndPortProvider;
+import biz.paluch.logging.gelf.intern.PoolingGelfMessageBuilder;
 
 /**
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * Creates {@link GelfMessage} based on various {@link LogEvent}. A {@link LogEvent} encapsulates log-framework specifics and
+ * exposes commonly used details of log events.
+ *
+ * @author Mark Paluch
  * @since 26.09.13 15:05
  */
 public class GelfMessageAssembler implements HostAndPortProvider {
 
+    public static final String PROPERTY_USE_POOLING = "logstash-gelf.message.pooling";
+    private static final boolean USE_POOLING = Boolean
+            .valueOf(RuntimeContainerProperties.getProperty(PROPERTY_USE_POOLING, "true"));
+
     private static final int MAX_SHORT_MESSAGE_LENGTH = 250;
+    private static final int MAX_PORT_NUMBER = 65535;
+    private static final int MAX_MESSAGE_SIZE = Integer.MAX_VALUE;
 
     public static final String FIELD_MESSAGE_PARAM = "MessageParam";
     public static final String FIELD_STACK_TRACE = "StackTrace";
 
     private String host;
+    private String version = GelfMessage.GELF_VERSION;
     private String originHost;
     private int port;
     private String facility;
@@ -34,13 +49,27 @@ public class GelfMessageAssembler implements HostAndPortProvider {
     private int maximumMessageSize = 8192;
 
     private List<MessageField> fields = new ArrayList<MessageField>();
+    private Map<String, String> additionalFieldTypes = new HashMap<String, String>();
 
     private String timestampPattern = "yyyy-MM-dd HH:mm:ss,SSSS";
 
+    private boolean usePooling = USE_POOLING;
+
+    private ThreadLocal<PoolingGelfMessageBuilder> builders = new ThreadLocal<PoolingGelfMessageBuilder>() {
+
+        @Override
+        protected PoolingGelfMessageBuilder initialValue() {
+            return PoolingGelfMessageBuilder.newInstance();
+        }
+    };
+
+    public GelfMessageAssembler() {
+    }
+
     /**
-     * Initialize datastructure from property provider.
-     * 
-     * @param propertyProvider
+     * Initialize the {@link GelfMessageAssembler} from a property provider.
+     *
+     * @param propertyProvider property provider to obtain configuration properties
      */
     public void initialize(PropertyProvider propertyProvider) {
         host = propertyProvider.getProperty(PropertyProvider.PROPERTY_HOST);
@@ -53,7 +82,7 @@ public class GelfMessageAssembler implements HostAndPortProvider {
             port = propertyProvider.getProperty(PropertyProvider.PROPERTY_GRAYLOG_PORT);
         }
 
-        if (port != null) {
+        if (port != null && !"".equals(port)) {
             this.port = Integer.parseInt(port);
         }
 
@@ -62,7 +91,13 @@ public class GelfMessageAssembler implements HostAndPortProvider {
         filterStackTrace = "true".equalsIgnoreCase(propertyProvider.getProperty(PropertyProvider.PROPERTY_FILTER_STACK_TRACE));
 
         setupStaticFields(propertyProvider);
+        setupAdditionalFieldTypes(propertyProvider);
         facility = propertyProvider.getProperty(PropertyProvider.PROPERTY_FACILITY);
+        String version = propertyProvider.getProperty(PropertyProvider.PROPERTY_VERSION);
+
+        if (version != null && !"".equals(version)) {
+            this.version = version;
+        }
 
         String messageSize = propertyProvider.getProperty(PropertyProvider.PROPERTY_MAX_MESSAGE_SIZE);
         if (messageSize != null) {
@@ -71,15 +106,21 @@ public class GelfMessageAssembler implements HostAndPortProvider {
     }
 
     /**
-     * Producte a Gelf message.
-     * 
-     * @param logEvent
-     * @return GelfMessage
+     * Produce a {@link GelfMessage}.
+     *
+     * @param logEvent the log event
+     * @return a new GelfMessage
      */
     public GelfMessage createGelfMessage(LogEvent logEvent) {
 
-        GelfMessageBuilder builder = newInstance();
+        GelfMessageBuilder builder = usePooling ? builders.get().recycle() : newInstance();
+
+        Throwable throwable = logEvent.getThrowable();
         String message = logEvent.getMessage();
+
+        if (GelfMessage.isEmpty(message) && throwable != null) {
+            message = throwable.toString();
+        }
 
         String shortMessage = message;
         if (message.length() > MAX_SHORT_MESSAGE_LENGTH) {
@@ -88,6 +129,8 @@ public class GelfMessageAssembler implements HostAndPortProvider {
 
         builder.withShortMessage(shortMessage).withFullMessage(message).withJavaTimestamp(logEvent.getLogTimestamp());
         builder.withLevel(logEvent.getSyslogLevel());
+        builder.withVersion(getVersion());
+        builder.withAdditionalFieldTypes(additionalFieldTypes);
 
         for (MessageField field : fields) {
             Values values = getValues(logEvent, field);
@@ -105,8 +148,8 @@ public class GelfMessageAssembler implements HostAndPortProvider {
             }
         }
 
-        if (extractStackTrace) {
-            addStackTrace(logEvent, builder);
+        if (extractStackTrace && throwable != null) {
+            addStackTrace(throwable, builder);
         }
 
         if (logEvent.getParameters() != null) {
@@ -151,16 +194,13 @@ public class GelfMessageAssembler implements HostAndPortProvider {
         return field.getValue();
     }
 
-    private void addStackTrace(LogEvent logEvent, GelfMessageBuilder builder) {
-        final Throwable thrown = logEvent.getThrowable();
-        if (null != thrown) {
-            if (filterStackTrace) {
-                builder.withField(FIELD_STACK_TRACE, StackTraceFilter.getFilteredStackTrace(thrown));
-            } else {
-                final StringWriter sw = new StringWriter();
-                thrown.printStackTrace(new PrintWriter(sw));
-                builder.withField(FIELD_STACK_TRACE, sw.toString());
-            }
+    private void addStackTrace(Throwable thrown, GelfMessageBuilder builder) {
+        if (filterStackTrace) {
+            builder.withField(FIELD_STACK_TRACE, StackTraceFilter.getFilteredStackTrace(thrown));
+        } else {
+            final StringWriter sw = new StringWriter();
+            thrown.printStackTrace(new PrintWriter(sw));
+            builder.withField(FIELD_STACK_TRACE, sw.toString());
         }
     }
 
@@ -180,11 +220,35 @@ public class GelfMessageAssembler implements HostAndPortProvider {
 
             fieldNumber++;
         }
+    }
 
+    private void setupAdditionalFieldTypes(PropertyProvider propertyProvider) {
+        int fieldNumber = 0;
+        while (true) {
+            final String property = propertyProvider.getProperty(PropertyProvider.PROPERTY_ADDITIONAL_FIELD_TYPE + fieldNumber);
+            if (null == property) {
+                break;
+            }
+            final int index = property.indexOf('=');
+            if (-1 != index) {
+
+                String field = property.substring(0, index);
+                String type = property.substring(index + 1);
+                setAdditionalFieldType(field, type);
+            }
+
+            fieldNumber++;
+        }
+    }
+
+    public void setAdditionalFieldType(String field, String type) {
+        additionalFieldTypes.put(field, type);
     }
 
     public void addField(MessageField field) {
-        this.fields.add(field);
+        if (!fields.contains(field)) {
+            this.fields.add(field);
+        }
     }
 
     public void addFields(Collection<? extends MessageField> fields) {
@@ -215,6 +279,9 @@ public class GelfMessageAssembler implements HostAndPortProvider {
     }
 
     public void setPort(int port) {
+        if (port > MAX_PORT_NUMBER || port < 1) {
+            throw new IllegalArgumentException("Invalid port number: " + port + ", supported range: 1-" + MAX_PORT_NUMBER);
+        }
         this.port = port;
     }
 
@@ -255,7 +322,26 @@ public class GelfMessageAssembler implements HostAndPortProvider {
     }
 
     public void setMaximumMessageSize(int maximumMessageSize) {
+
+        if (maximumMessageSize > MAX_MESSAGE_SIZE || maximumMessageSize < 1) {
+            throw new IllegalArgumentException(
+                    "Invalid maximum message size: " + maximumMessageSize + ", supported range: 1-" + MAX_MESSAGE_SIZE);
+        }
+
         this.maximumMessageSize = maximumMessageSize;
     }
 
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+
+        if (!GelfMessage.GELF_VERSION_1_0.equals(version) && !GelfMessage.GELF_VERSION_1_1.equals(version)) {
+            throw new IllegalArgumentException("Invalid GELF version: " + version + ", supported range: "
+                    + GelfMessage.GELF_VERSION_1_0 + ", " + GelfMessage.GELF_VERSION_1_1);
+        }
+
+        this.version = version;
+    }
 }

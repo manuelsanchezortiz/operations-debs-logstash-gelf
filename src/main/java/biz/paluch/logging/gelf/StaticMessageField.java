@@ -1,6 +1,7 @@
 package biz.paluch.logging.gelf;
 
 /**
+ * @author Mark Paluch
  */
 public class StaticMessageField implements MessageField {
 

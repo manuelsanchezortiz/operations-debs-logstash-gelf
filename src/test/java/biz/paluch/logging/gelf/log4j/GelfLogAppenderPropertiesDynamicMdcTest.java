@@ -2,10 +2,12 @@ package biz.paluch.logging.gelf.log4j;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.HashSet;
 import java.util.Set;
 
+import biz.paluch.logging.gelf.Log4jUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
@@ -17,7 +19,7 @@ import biz.paluch.logging.gelf.GelfTestSender;
 import biz.paluch.logging.gelf.intern.GelfMessage;
 
 /**
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * @author Mark Paluch
  * @since 27.09.13 07:47
  */
 public class GelfLogAppenderPropertiesDynamicMdcTest {
@@ -36,7 +38,7 @@ public class GelfLogAppenderPropertiesDynamicMdcTest {
     public void before() throws Exception {
         LogManager.getLoggerRepository().resetConfiguration();
         GelfTestSender.getMessages().clear();
-        PropertyConfigurator.configure(getClass().getResource("/log4j-test-with-mdcfields.properties"));
+        PropertyConfigurator.configure(getClass().getResource("/log4j/log4j-test-with-mdcfields.properties"));
 
         if (MDC.getContext() != null && MDC.getContext().keySet() != null) {
 
@@ -65,6 +67,8 @@ public class GelfLogAppenderPropertiesDynamicMdcTest {
     @Test
     public void testWithMdcPrefix() throws Exception {
 
+        assumeTrue(Log4jUtil.isLog4jMDCAvailable());
+
         Logger logger = Logger.getLogger(getClass());
         MDC.put(MDC_MY_MDC, VALUE_1);
         MDC.put(MY_MDC_WITH_SUFFIX1, VALUE_2);
@@ -83,6 +87,8 @@ public class GelfLogAppenderPropertiesDynamicMdcTest {
 
     @Test
     public void testWithMdcRegex() throws Exception {
+
+        assumeTrue(Log4jUtil.isLog4jMDCAvailable());
 
         Logger logger = Logger.getLogger(getClass());
         MDC.put(SOME_FIELD, "included");

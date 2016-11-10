@@ -1,19 +1,14 @@
 package biz.paluch.logging.gelf;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.AdaptiveRecvByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
-
 import java.util.List;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+
 /**
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * @author Mark Paluch
  * @since 10.11.13 10:30
  */
 public class NettyLocalServer {
@@ -30,20 +25,27 @@ public class NettyLocalServer {
     }
 
     public void run() throws Exception {
+        run(new ChannelInitializer<Channel>() {
+            @Override
+            protected void initChannel(Channel ch) throws Exception {
+                ch.pipeline().addLast(handler);
+            }
+        });
+    }
+
+    public void run(ChannelInitializer<Channel> initializer) throws Exception {
         if (ServerChannel.class.isAssignableFrom(channelClass)) {
             ServerBootstrap b = new ServerBootstrap();
             b.group(group);
-            b.channel((Class) channelClass)
-                    .childHandler(handler)
-                    .childOption(ChannelOption.RCVBUF_ALLOCATOR,
-                            new AdaptiveRecvByteBufAllocator(8192, 8192, Integer.MAX_VALUE));
+            b.channel((Class) channelClass).childHandler(initializer).childOption(ChannelOption.RCVBUF_ALLOCATOR,
+                    new AdaptiveRecvByteBufAllocator(8192, 8192, Integer.MAX_VALUE));
 
             // Bind and start to accept incoming connections.
             f = b.bind(port).sync();
         } else {
             Bootstrap b = new Bootstrap();
             b.group(group);
-            b.channel((Class) channelClass).handler(handler);
+            b.channel(channelClass).handler(initializer);
 
             // Bind and start to accept incoming connections.
             f = b.bind(port).sync();
@@ -52,15 +54,26 @@ public class NettyLocalServer {
     }
 
     public void close() {
-        f.channel().close();
-        f = null;
+
+        if (f != null) {
+            f.channel().close();
+            f = null;
+        }
     }
 
     public List<Object> getJsonValues() {
         return handler.getJsonValues();
     }
 
+    public GelfInboundHandler getHandler() {
+        return handler;
+    }
+
     public void clear() {
         handler.clear();
+    }
+
+    public int getPort() {
+        return port;
     }
 }

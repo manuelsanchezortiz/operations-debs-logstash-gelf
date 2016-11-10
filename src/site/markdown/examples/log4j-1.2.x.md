@@ -1,28 +1,31 @@
-Settings
---------------
+log4j 1.2.x
+=========
+
 Following settings can be used:
 
- * host (since version 1.2.0, Mandatory): Hostname/IP-Address of the Logstash Host
-     * tcp:(the host) for TCP, e.g. tcp:127.0.0.1 or tcp:some.host.com
-     * udp:(the host) for UDP, e.g. udp:127.0.0.1 or udp:some.host.com
-     * redis://\[:REDISDB_PASSWORD@\]REDISDB_HOST:REDISDB_PORT/REDISDB_NUMBER#REDISDB_LISTNAME , e.g. redis://:donttrustme@127.0.0.1:6379/0#myloglist or if no password needed redis://127.0.0.1:6379/0#myloglist
-     * (the host) for UDP, e.g. 127.0.0.1 or some.host.com
- * port (since version 1.2.0, Optional): Port, default 12201
- * graylogHost (until version 1.1.0, Mandatory): Hostname/IP-Address of the Logstash Host
- * graylogPort (until version 1.1.0, Optional): Port, default 12201
- * originHost (Optional): Originating Hostname, default FQDN Hostname
- * extractStackTrace (Optional): Post Stack-Trace to StackTrace field, default false
- * filterStackTrace (Optional): Perform Stack-Trace filtering (true/false), default false
- * mdcProfiling (Optional): Perform Profiling (Call-Duration) based on MDC Data. See MDC Profiling, default false. See [MDC Profiling](../mdcprofiling.html) for details.
- * facility (Optional): Name of the Facility, default logstash-gelf
- * threshold/level (Optional): Log-Level, default INFO
- * filter (Optional): Class-Name of a Log-Filter, default none
- * additionalFields (Optional): Post additional fields. Eg. .GelfLogHandler.additionalFields=fieldName=Value
- * mdcFields (Optional): Post additional fields, pull Values from MDC. Name of the Fields are comma-separated mdcFields=Application,Version,SomeOtherFieldName
- * dynamicMdcFields (Optional): Dynamic MDC Fields allows you to extract MDC values based on one or more regular expressions. Multiple regex are comma-separated. The name of the MDC entry is used as GELF field name.
- * includeFullMdc (Optional): Include all fields from the MDC, default false
+| Attribute Name    | Description                          | Default |
+| ----------------- |:------------------------------------:|:-------:|
+| host              | Hostname/IP-Address of the Logstash host. The `host` field accepts following forms: <ul><li>`tcp:hostname` for TCP transport, e. g. `tcp:127.0.0.1` or `tcp:some.host.com` </li><li>`udp:hostname` for UDP transport, e. g. `udp:127.0.0.1`, `udp:some.host.com` or just `some.host.com`  </li><li>`redis://[:password@]hostname:port/db-number#listname` for Redis transport. See [Redis transport for logstash-gelf](../redis.html) for details. </li><li>`redis-sentinel://[:password@]hostname:port/db-number?masterId=masterId#listname` for Redis transport with Sentinel lookup. See [Redis transport for logstash-gelf](../redis.html) for details. </li></ul> | none | 
+| port              | Port of the Logstash host  | `12201` |
+| version           | GELF Version `1.0` or `1.1` | `1.0` |
+| originHost        | Originating Hostname  | FQDN Hostname |
+| extractStackTrace | Send the Stack-Trace to the StackTrace field (`true`/`false`)  | `false` |
+| filterStackTrace  | Perform Stack-Trace filtering (`true`/`false`)| `false` |
+| facility          | Name of the Facility  | `logstash-gelf` |
+| mdcProfiling      | Perform Profiling (Call-Duration) based on MDC Data. See [MDC Profiling](../mdcprofiling.html) for details  | `false` |
+| threshold         | Log-Level threshold | `INFO` |
+| filter            | Class-Name of a Log-Filter  | none |
+| additionalFields  | Send additional static fields. The fields are specified as key-value pairs are comma-separated. Example: `additionalFields=fieldName=Value,fieldName2=Value2` | none |
+| additionalFieldTypes | Type specification for additional and MDC fields. Supported types: `String`, `long`, `Long`, `double`, `Double` and `discover` (default if not specified, discover field type on parseability). Eg. field=String,field2=double | `discover` for all additional fields |
+| mdcFields         | Send additional fields whose values are obtained from MDC. Name of the Fields are comma-separated. Example: `mdcFields=Application,Version,SomeOtherFieldName` | none |
+| dynamicMdcFields  | Dynamic MDC Fields allows you to extract MDC values based on one or more regular expressions. Multiple regexes are comma-separated. The name of the MDC entry is used as GELF field name. | none |
+| includeFullMdc    | Include all fields from the MDC. | `false` |
+| maximumMessageSize| Maximum message size (in bytes). If the message size is exceeded, the appender will submit the message in multiple chunks. | `8192` |
+| timestampPattern  | Date/time pattern for the `Time` field| `yyyy-MM-dd HH:mm:ss,SSSS` |
 
-log4j configuration
+The only mandatory field is `host`. All other fields are optional.
+
+log4j Configuration
 --------------
 
 Properties:
@@ -31,6 +34,7 @@ Properties:
     log4j.appender.gelf.Threshold=INFO
     log4j.appender.gelf.Host=udp:localhost
     log4j.appender.gelf.Port=12201
+    log4j.appender.gelf.Version=1.0
     log4j.appender.gelf.Facility=java-test
     log4j.appender.gelf.ExtractStackTrace=true
     log4j.appender.gelf.FilterStackTrace=true
@@ -38,6 +42,7 @@ Properties:
     log4j.appender.gelf.TimestampPattern=yyyy-MM-dd HH:mm:ss,SSSS
     log4j.appender.gelf.MaximumMessageSize=8192
     log4j.appender.gelf.AdditionalFields=fieldName1=fieldValue1,fieldName2=fieldValue2
+    log4j.appender.gelf.AdditionalFieldTypes=fieldName1=String,fieldName2=Double,fieldName3=Long
     log4j.appender.gelf.MdcFields=mdcField1,mdcField2
     log4j.appender.gelf.DynamicMdcFields=mdc.*,(mdc|MDC)fields
     log4j.appender.gelf.IncludeFullMdc=true
@@ -56,6 +61,7 @@ XML:
         <param name="TimestampPattern" value="yyyy-MM-dd HH:mm:ss,SSSS" />
         <param name="MaximumMessageSize" value="8192" />
         <param name="AdditionalFields" value="fieldName1=fieldValue1,fieldName2=fieldValue2" />
+        <param name="AdditionalFieldTypes" value="fieldName1=String,fieldName2=Double,fieldName3=Long" />
         <param name="MdcFields" value="mdcField1,mdcField2" />
         <param name="DynamicMdcFields" value="mdc.*,(mdc|MDC)fields" />
         <param name="IncludeFullMdc" value="true" />

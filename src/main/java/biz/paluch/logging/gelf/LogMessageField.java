@@ -1,29 +1,36 @@
 package biz.paluch.logging.gelf;
 
 import static biz.paluch.logging.RuntimeContainerProperties.getProperty;
-import static java.lang.Boolean.getBoolean;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import biz.paluch.logging.gelf.intern.Closer;
 
 /**
  * Field with reference to the log event.
+ *
+ * @author Mark Paluch
  */
 public class LogMessageField implements MessageField {
 
     public static final String VERBOSE_LOGGING_PROPERTY = "logstash-gelf.LogMessageField.verbose";
+
     private static final String DEFAULT_MAPPING = "default-logstash-fields.properties";
+    private static final boolean VERBOSE_LOGGING = Boolean.parseBoolean(getProperty(VERBOSE_LOGGING_PROPERTY, "false"));
 
     /**
      * Named references to common log event fields.
      */
     public static enum NamedLogField {
         Time("Time"), Severity("Severity"), ThreadName("Thread"), SourceClassName("SourceClassName"), SourceSimpleClassName(
-                "SourceSimpleClassName"), SourceMethodName("SourceMethodName"), Server("Server"), LoggerName("LoggerName"), Marker(
-                "Marker"), NDC("NDC");
+                "SourceSimpleClassName"), SourceMethodName("SourceMethodName"), SourceLineNumber("SourceLineNumber"), Server(
+                "Server"), LoggerName("LoggerName"), Marker("Marker"), NDC("NDC");
 
         private final String fieldName;
 
@@ -111,7 +118,7 @@ public class LogMessageField implements MessageField {
     }
 
     private static void verboseLog(String message) {
-        if (getBoolean(getProperty(VERBOSE_LOGGING_PROPERTY, "false"))) {
+        if (VERBOSE_LOGGING) {
             System.out.println(message);
         }
     }

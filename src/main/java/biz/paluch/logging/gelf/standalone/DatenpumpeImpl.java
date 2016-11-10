@@ -1,16 +1,16 @@
 package biz.paluch.logging.gelf.standalone;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import biz.paluch.logging.gelf.GelfMessageBuilder;
 import biz.paluch.logging.gelf.intern.GelfMessage;
 import biz.paluch.logging.gelf.intern.GelfSender;
 import biz.paluch.logging.gelf.intern.GelfSenderConfiguration;
 import biz.paluch.logging.gelf.intern.GelfSenderFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * @author Mark Paluch
  * @since 31.07.14 08:47
  */
 public class DatenpumpeImpl implements Datenpumpe {

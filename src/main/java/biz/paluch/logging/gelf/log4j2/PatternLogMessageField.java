@@ -5,6 +5,7 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
 import biz.paluch.logging.gelf.LogMessageField;
 
 /**
+ * @author Mark Paluch
  */
 public class PatternLogMessageField extends LogMessageField {
 

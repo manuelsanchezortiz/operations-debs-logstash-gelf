@@ -1,21 +1,24 @@
-Settings
---------------
+log4j2
+=========
+
 Following settings can be used:
 
- * host (since 1.2, Mandatory): Hostname/IP-Address of the Logstash Host
-     * tcp:(the host) for TCP, e.g. tcp:127.0.0.1 or tcp:some.host.com
-     * udp:(the host) for UDP, e.g. udp:127.0.0.1 or udp:some.host.com
-     * redis://\[:REDISDB_PASSWORD@\]REDISDB_HOST:REDISDB_PORT/REDISDB_NUMBER#REDISDB_LISTNAME , e.g. redis://:donttrustme@127.0.0.1:6379/0#myloglist or if no password needed redis://127.0.0.1:6379/0#myloglist
-     * (the host) for UDP, e.g. 127.0.0.1 or some.host.com
- * port (since 1.2, Optional): Port, default 12201
- * graylogHost (until 1.1, Mandatory): Hostname/IP-Address of the Logstash Host
- * graylogPort (until 1.1, Optional): Port, default 12201
- * originHost (Optional): Originating Hostname, default FQDN Hostname (Patterns can be used)
- * extractStackTrace (Optional): Post Stack-Trace to StackTrace field, default false
- * filterStackTrace (Optional): Perform Stack-Trace filtering (true/false), default false
- * mdcProfiling (Optional): Perform Profiling (Call-Duration) based on MDC Data. See MDC Profiling, default false. See [MDC Profiling](../mdcprofiling.html) for details.
- * facility (Optional): Name of the Facility, default logstash-gelf
- * includeFullMdc (Optional): Include all fields from the MDC, default false
+| Attribute Name    | Description                          | Default |
+| ----------------- |:------------------------------------:|:-------:|
+| host              | Hostname/IP-Address of the Logstash host. The `host` field accepts following forms: <ul><li>`tcp:hostname` for TCP transport, e. g. `tcp:127.0.0.1` or `tcp:some.host.com` </li><li>`udp:hostname` for UDP transport, e. g. `udp:127.0.0.1`, `udp:some.host.com` or just `some.host.com`  </li><li>`redis://[:password@]hostname:port/db-number#listname` for Redis transport. See [Redis transport for logstash-gelf](../redis.html) for details. </li><li>`redis-sentinel://[:password@]hostname:port/db-number?masterId=masterId#listname` for Redis transport with Sentinel lookup. See [Redis transport for logstash-gelf](../redis.html) for details. </li></ul> | none | 
+| port              | Port of the Logstash host  | `12201` |
+| version           | GELF Version `1.0` or `1.1` | `1.0` |
+| originHost        | Originating Hostname  | FQDN Hostname |
+| extractStackTrace | Send the Stack-Trace to the StackTrace field (`true`/`false`)  | `false` |
+| filterStackTrace  | Perform Stack-Trace filtering (`true`/`false`)| `false` |
+| facility          | Name of the Facility  | `logstash-gelf` |
+| mdcProfiling      | Perform Profiling (Call-Duration) based on MDC Data. See [MDC Profiling](../mdcprofiling.html) for details  | `false` |
+| includeFullMdc    | Include all fields from the MDC. | `false` |
+| maximumMessageSize| Maximum message size (in bytes). If the message size is exceeded, the appender will submit the message in multiple chunks. | `8192` |
+| additionalFieldTypes | Type specification for additional and MDC fields. Supported types: `String`, `long`, `Long`, `double`, `Double` and `discover` (default if not specified, discover field type on parseability). Eg. field=String,field2=double | `discover` for all additional fields |
+|ignoreExceptions    | The default is `true`, causing exceptions encountered while appending events to be internally logged and then ignored. When set to `false` exceptions will be propagated to the caller, instead. You must set this to false when wrapping this Appender in a `FailoverAppender`.| `true` |
+
+The only mandatory field is `host`. All other fields are optional.
 
 ### Fields
 
@@ -66,9 +69,10 @@ XML:
     
     <Configuration>
         <Appenders>
-            <Gelf name="gelf" graylogHost="udp:localhost" graylogPort="12201" extractStackTrace="true"
+            <Gelf name="gelf" host="udp:localhost" port="12201" version="1.0" extractStackTrace="true"
                   filterStackTrace="true" mdcProfiling="true" includeFullMdc="true" maximumMessageSize="8192" 
-                  originHost="my.host.name">
+                  originHost="my.host.name" additionalFieldTypes="fieldName1=String,fieldName2=Double,fieldName3=Long"
+                  ignoreExceptions="true">
                 <Field name="timestamp" pattern="%d{dd MMM yyyy HH:mm:ss,SSS}" />
                 <Field name="level" pattern="%level" />
                 <Field name="simpleClassName" pattern="%C{1}" />

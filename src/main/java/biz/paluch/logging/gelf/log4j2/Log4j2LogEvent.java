@@ -1,5 +1,11 @@
 package biz.paluch.logging.gelf.log4j2;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.logging.log4j.Level;
+
 import biz.paluch.logging.gelf.DynamicMdcMessageField;
 import biz.paluch.logging.gelf.GelfUtil;
 import biz.paluch.logging.gelf.LogEvent;
@@ -7,13 +13,10 @@ import biz.paluch.logging.gelf.LogMessageField;
 import biz.paluch.logging.gelf.MdcMessageField;
 import biz.paluch.logging.gelf.MessageField;
 import biz.paluch.logging.gelf.Values;
-import org.apache.logging.log4j.Level;
-
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import biz.paluch.logging.gelf.intern.GelfMessage;
 
 /**
+ * @author Mark Paluch
  */
 class Log4j2LogEvent implements LogEvent {
 
@@ -49,7 +52,6 @@ class Log4j2LogEvent implements LogEvent {
     }
 
     private int levelToSyslogLevel(final Level level) {
-        final int syslogLevel;
 
         switch (level.getStandardLevel()) {
             case FATAL:
@@ -61,7 +63,7 @@ class Log4j2LogEvent implements LogEvent {
             case INFO:
                 return 6;
             default:
-                return 7;
+                return GelfMessage.DEFAUL_LEVEL;
 
         }
     }
@@ -95,11 +97,17 @@ class Log4j2LogEvent implements LogEvent {
             case ThreadName:
                 return logEvent.getThreadName();
             case SourceClassName:
-                return logEvent.getSource().getClassName();
+                return getSourceClassName();
+            case SourceLineNumber:
+                return getSourceLineNumber();
             case SourceMethodName:
-                return logEvent.getSource().getMethodName();
+                return getSourceMethodName();
             case SourceSimpleClassName:
-                return GelfUtil.getSimpleClassName(logEvent.getSource().getClassName());
+                String sourceClassName = getSourceClassName();
+                if (sourceClassName == null) {
+                    return null;
+                }
+                return GelfUtil.getSimpleClassName(sourceClassName);
             case LoggerName:
                 return logEvent.getLoggerName();
             case Marker:
@@ -110,6 +118,30 @@ class Log4j2LogEvent implements LogEvent {
         }
 
         throw new UnsupportedOperationException("Cannot provide value for " + field);
+    }
+
+    private String getSourceMethodName() {
+        if (logEvent.getSource() == null) {
+            return null;
+        }
+
+        return logEvent.getSource().getMethodName();
+    }
+
+    private String getSourceLineNumber() {
+        if (logEvent.getSource() == null || logEvent.getSource().getLineNumber() <= 0) {
+            return null;
+        }
+
+        return "" + logEvent.getSource().getLineNumber();
+    }
+
+    private String getSourceClassName() {
+        if (logEvent.getSource() == null) {
+            return null;
+        }
+
+        return logEvent.getSource().getClassName();
     }
 
     private Values getMdcValues(DynamicMdcMessageField field) {

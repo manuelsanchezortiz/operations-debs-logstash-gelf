@@ -1,5 +1,8 @@
 package biz.paluch.logging.gelf.standalone;
 
+/**
+ * @author Mark Paluch
+ */
 public class ShoppingCart {
 
     private String cartId;

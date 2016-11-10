@@ -3,6 +3,7 @@ package biz.paluch.logging.gelf.log4j2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import biz.paluch.logging.gelf.LogMessageField;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.MarkerManager;
@@ -18,6 +19,7 @@ import biz.paluch.logging.gelf.GelfTestSender;
 import biz.paluch.logging.gelf.intern.GelfMessage;
 
 /**
+ * @author Mark Paluch
  */
 public class GelfLogAppenderMinimalTest {
     public static final String LOG_MESSAGE = "foo bar test log message";
@@ -27,7 +29,7 @@ public class GelfLogAppenderMinimalTest {
 
     @BeforeClass
     public static void beforeClass() {
-        System.setProperty(ConfigurationFactory.CONFIGURATION_FILE_PROPERTY, "log4j2-minimal.xml");
+        System.setProperty(ConfigurationFactory.CONFIGURATION_FILE_PROPERTY, "log4j2/log4j2-minimal.xml");
         loggerContext = (LoggerContext) LogManager.getContext(false);
         loggerContext.reconfigure();
     }
@@ -68,6 +70,10 @@ public class GelfLogAppenderMinimalTest {
         assertNotNull(gelfMessage.getField("MyTime"));
         assertEquals("test", gelfMessage.getAdditonalFields().get("Marker"));
         assertEquals("6", gelfMessage.getLevel());
+
+        assertNotNull(gelfMessage.getField(LogMessageField.NamedLogField.SourceLineNumber.name()));
+        assertEquals("testSimpleInfo", gelfMessage.getField(LogMessageField.NamedLogField.SourceMethodName.name()));
+        assertEquals(getClass().getName(), gelfMessage.getField(LogMessageField.NamedLogField.SourceClassName.name()));
 
     }
 }

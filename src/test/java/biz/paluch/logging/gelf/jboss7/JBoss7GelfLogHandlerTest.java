@@ -1,26 +1,23 @@
 package biz.paluch.logging.gelf.jboss7;
 
-import static biz.paluch.logging.gelf.jboss7.JBoss7LogTestUtil.getJBoss7GelfLogHandler;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static biz.paluch.logging.gelf.jboss7.JBoss7LogTestUtil.*;
+import static org.junit.Assert.*;
 
 import java.util.logging.Level;
 import java.util.logging.LogManager;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.logmanager.MDC;
 import org.jboss.logmanager.NDC;
 import org.junit.Before;
 import org.junit.Test;
 
 import biz.paluch.logging.gelf.GelfTestSender;
+import biz.paluch.logging.gelf.LogMessageField;
 import biz.paluch.logging.gelf.intern.GelfMessage;
 
 /**
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * @author Mark Paluch
  * @since 27.09.13 08:36
  */
 public class JBoss7GelfLogHandlerTest {
@@ -51,12 +48,78 @@ public class JBoss7GelfLogHandlerTest {
 
         GelfMessage gelfMessage = GelfTestSender.getMessages().get(0);
 
+        assertEquals(GelfMessage.GELF_VERSION_1_1, gelfMessage.getVersion());
         assertEquals(EXPECTED_LOG_MESSAGE, gelfMessage.getFullMessage());
         assertEquals(EXPECTED_LOG_MESSAGE, gelfMessage.getShortMessage());
         assertEquals("ndc message", gelfMessage.getField("NDC"));
         assertNotNull(gelfMessage.getField("MyTime"));
         assertEquals("6", gelfMessage.getLevel());
         assertEquals(8192, gelfMessage.getMaximumMessageSize());
+        assertEquals("testSimple", gelfMessage.getField(LogMessageField.NamedLogField.SourceMethodName.name()));
+        assertEquals(getClass().getName(), gelfMessage.getField(LogMessageField.NamedLogField.SourceClassName.name()));
+
+    }
+
+    @Test
+    public void testWarning() throws Exception {
+
+        JBoss7GelfLogHandler handler = getJBoss7GelfLogHandler();
+
+        Logger logger = Logger.getLogger(getClass().getName());
+        logger.addHandler(handler);
+
+        logger.warning(LOG_MESSAGE);
+        assertEquals(1, GelfTestSender.getMessages().size());
+
+        GelfMessage gelfMessage = GelfTestSender.getMessages().get(0);
+        assertEquals("4", gelfMessage.getLevel());
+    }
+
+    @Test
+    public void testFine() throws Exception {
+
+        JBoss7GelfLogHandler handler = getJBoss7GelfLogHandler();
+        handler.setLevel(Level.ALL);
+
+        Logger logger = Logger.getLogger(getClass().getName());
+        logger.addHandler(handler);
+        logger.setLevel(Level.ALL);
+
+        logger.fine(LOG_MESSAGE);
+        assertEquals("7", GelfTestSender.getMessages().get(0).getLevel());
+        GelfTestSender.getMessages().clear();
+
+        logger.info(LOG_MESSAGE);
+        assertEquals("6", GelfTestSender.getMessages().get(0).getLevel());
+        GelfTestSender.getMessages().clear();
+
+        logger.warning(LOG_MESSAGE);
+        assertEquals("4", GelfTestSender.getMessages().get(0).getLevel());
+        GelfTestSender.getMessages().clear();
+
+        logger.severe(LOG_MESSAGE);
+        assertEquals("3", GelfTestSender.getMessages().get(0).getLevel());
+        GelfTestSender.getMessages().clear();
+
+    }
+
+    @Test
+    public void testSevere() throws Exception {
+
+        JBoss7GelfLogHandler handler = getJBoss7GelfLogHandler();
+
+        NDC.clear();
+        Logger logger = Logger.getLogger(getClass().getName());
+        logger.addHandler(handler);
+
+        NDC.push("ndc message");
+        logger.severe(LOG_MESSAGE);
+        NDC.clear();
+        assertEquals(1, GelfTestSender.getMessages().size());
+
+        GelfMessage gelfMessage = GelfTestSender.getMessages().get(0);
+
+        assertEquals("3", gelfMessage.getLevel());
 
     }
 
@@ -138,13 +201,12 @@ public class JBoss7GelfLogHandlerTest {
 
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testWrongConfig() throws Exception {
         JBoss7GelfLogHandler handler = new JBoss7GelfLogHandler();
 
         handler.setGraylogHost(null);
         handler.setGraylogPort(0);
-        handler.createGelfMessage(ExtLogRecord.wrap(new LogRecord(Level.ALL, LOG_MESSAGE)));
 
     }
 }

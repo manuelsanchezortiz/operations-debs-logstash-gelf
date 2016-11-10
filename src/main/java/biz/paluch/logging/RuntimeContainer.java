@@ -1,6 +1,12 @@
 package biz.paluch.logging;
 
-import static biz.paluch.logging.RuntimeContainerProperties.*;
+import static biz.paluch.logging.RuntimeContainerProperties.PROPERTY_LOGSTASH_GELF_FQDN_HOSTNAME;
+import static biz.paluch.logging.RuntimeContainerProperties.PROPERTY_LOGSTASH_GELF_HOSTNAME;
+import static biz.paluch.logging.RuntimeContainerProperties.PROPERTY_LOGSTASH_GELF_HOSTNAME_RESOLUTION_ORDER;
+import static biz.paluch.logging.RuntimeContainerProperties.PROPERTY_LOGSTASH_GELF_SKIP_HOSTNAME_RESOLUTION;
+import static biz.paluch.logging.RuntimeContainerProperties.RESOLUTION_ORDER_LOCALHOST_NETWORK_FALLBACK;
+import static biz.paluch.logging.RuntimeContainerProperties.RESOLUTION_ORDER_NETWORK_LOCALHOST_FALLBACK;
+import static biz.paluch.logging.RuntimeContainerProperties.getProperty;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -14,7 +20,7 @@ import biz.paluch.logging.gelf.intern.ErrorReporter;
  * Static Details about the runtime container: Hostname (simple/fqdn), Address and timestamp of the first access (time when the
  * application was loaded).
  * 
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * @author Mark Paluch
  */
 public class RuntimeContainer {
 
@@ -53,6 +59,7 @@ public class RuntimeContainer {
 
     /**
      * Initialize only once.
+     * @param errorReporter the error reporter
      */
     public static void initialize(ErrorReporter errorReporter) {
 
@@ -64,6 +71,7 @@ public class RuntimeContainer {
 
     /**
      * Triggers the hostname lookup.
+     * @param errorReporter the error reporter
      */
     public static void lookupHostname(ErrorReporter errorReporter) {
         String myHostName = getProperty(PROPERTY_LOGSTASH_GELF_HOSTNAME, "unknown");

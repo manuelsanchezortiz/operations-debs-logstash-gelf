@@ -1,11 +1,5 @@
 package biz.paluch.logging.gelf.jul;
 
-import biz.paluch.logging.gelf.GelfUtil;
-import biz.paluch.logging.gelf.LogEvent;
-import biz.paluch.logging.gelf.LogMessageField;
-import biz.paluch.logging.gelf.MessageField;
-import biz.paluch.logging.gelf.Values;
-
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -18,8 +12,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
+import biz.paluch.logging.gelf.GelfUtil;
+import biz.paluch.logging.gelf.LogEvent;
+import biz.paluch.logging.gelf.LogMessageField;
+import biz.paluch.logging.gelf.MessageField;
+import biz.paluch.logging.gelf.Values;
+import biz.paluch.logging.gelf.intern.GelfMessage;
+
 /**
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * @author Mark Paluch
  * @since 26.09.13 15:22
  */
 public class JulLogEvent implements LogEvent {
@@ -64,10 +65,12 @@ public class JulLogEvent implements LogEvent {
         if (message == null) {
             message = "";
         }
+        
+        if (record.getResourceBundle() != null && record.getResourceBundle().containsKey(message)) {
+            message = record.getResourceBundle().getString(message);
+        }
+        
         if (parameters != null && parameters.length > 0) {
-            if (record.getResourceBundle() != null && record.getResourceBundle().containsKey(record.getMessage())) {
-                message = record.getResourceBundle().getString(record.getMessage());
-            }
             String originalMessage = message;
 
             // by default, using {0}, {1}, etc. -> MessageFormat
@@ -122,17 +125,28 @@ public class JulLogEvent implements LogEvent {
     }
 
     private int levelToSyslogLevel(final Level level) {
-        final int syslogLevel;
-        if (level == Level.SEVERE) {
-            syslogLevel = 3;
-        } else if (level == Level.WARNING) {
-            syslogLevel = 4;
-        } else if (level == Level.INFO) {
-            syslogLevel = 6;
-        } else {
-            syslogLevel = 7;
+
+        if (level.intValue() <= Level.CONFIG.intValue()) {
+            return GelfMessage.DEFAUL_LEVEL;
         }
-        return syslogLevel;
+
+        if (level.intValue() <= Level.INFO.intValue()) {
+            return 6;
+        }
+
+        if (level.intValue() <= Level.WARNING.intValue()) {
+            return 4;
+        }
+
+        if (level.intValue() <= Level.SEVERE.intValue()) {
+            return 3;
+        }
+
+        if (level.intValue() > Level.SEVERE.intValue()) {
+            return 2;
+        }
+
+        return GelfMessage.DEFAUL_LEVEL;
     }
 
     public Values getValues(MessageField field) {
@@ -151,9 +165,9 @@ public class JulLogEvent implements LogEvent {
             case ThreadName:
                 return getThreadName(logRecord);
             case SourceClassName:
-                return logRecord.getSourceClassName();
+                return getSourceClassName();
             case SourceMethodName:
-                return logRecord.getSourceMethodName();
+                return getSourceMethodName();
             case SourceSimpleClassName:
                 return GelfUtil.getSimpleClassName(logRecord.getSourceClassName());
             case LoggerName:
@@ -161,6 +175,24 @@ public class JulLogEvent implements LogEvent {
         }
 
         throw new UnsupportedOperationException("Cannot provide value for " + field);
+    }
+
+    private String getSourceMethodName() {
+        String sourceMethodName = logRecord.getSourceMethodName();
+        if (sourceMethodName == null || "<unknown>".equals(sourceMethodName)) {
+            return null;
+        }
+
+        return sourceMethodName;
+    }
+
+    private String getSourceClassName() {
+        String sourceClassName = logRecord.getSourceClassName();
+        if (sourceClassName == null || "<unknown>".equals(sourceClassName)) {
+            return null;
+        }
+
+        return sourceClassName;
     }
 
     @Override

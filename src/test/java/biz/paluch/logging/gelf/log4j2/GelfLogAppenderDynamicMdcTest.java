@@ -1,8 +1,8 @@
 package biz.paluch.logging.gelf.log4j2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
+import biz.paluch.logging.gelf.GelfTestSender;
+import biz.paluch.logging.gelf.JsonUtil;
+import biz.paluch.logging.gelf.intern.GelfMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
@@ -13,9 +13,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import biz.paluch.logging.gelf.GelfTestSender;
-import biz.paluch.logging.gelf.intern.GelfMessage;
+import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+/**
+ * @author Mark Paluch
+ */
 public class GelfLogAppenderDynamicMdcTest {
     public static final String LOG_MESSAGE = "foo bar test log message";
     public static final String MDC_MY_MDC = "myMdc";
@@ -31,7 +36,7 @@ public class GelfLogAppenderDynamicMdcTest {
 
     @BeforeClass
     public static void setupClass() {
-        System.setProperty(ConfigurationFactory.CONFIGURATION_FILE_PROPERTY, "log4j2-dynamic-mdc.xml");
+        System.setProperty(ConfigurationFactory.CONFIGURATION_FILE_PROPERTY, "log4j2/log4j2-dynamic-mdc.xml");
         loggerContext = (LoggerContext) LogManager.getContext(false);
         loggerContext.reconfigure();
     }
@@ -78,7 +83,6 @@ public class GelfLogAppenderDynamicMdcTest {
         assertEquals(VALUE_1, gelfMessage.getField(MDC_MY_MDC));
         assertEquals(VALUE_2, gelfMessage.getField(MY_MDC_WITH_SUFFIX1));
         assertEquals(VALUE_3, gelfMessage.getField(MY_MDC_WITH_SUFFIX2));
-
     }
 
     @Test
@@ -95,5 +99,60 @@ public class GelfLogAppenderDynamicMdcTest {
 
         assertEquals("included", gelfMessage.getField(SOME_FIELD));
         assertNull(gelfMessage.getField(SOME_OTHER_FIELD));
+    }
+
+    @Test
+    public void testWithMdcFieldTypes() throws Exception {
+
+        Logger logger = loggerContext.getLogger(getClass().getName());
+        ThreadContext.put("myMdcs", "String");
+        ThreadContext.put("myMdcl", "1");
+        ThreadContext.put("myMdci", "2");
+        ThreadContext.put("myMdcd", "2.1");
+        ThreadContext.put("myMdcf", "2.2");
+
+        logger.info(LOG_MESSAGE);
+        assertEquals(1, GelfTestSender.getMessages().size());
+
+        GelfMessage gelfMessage = GelfTestSender.getMessages().get(0);
+        Map<String, Object> jsonObject = JsonUtil.parseToMap(gelfMessage.toJson(""));
+
+        assertEquals("String", jsonObject.get("myMdcs"));
+        assertEquals(1, jsonObject.get("myMdcl"));
+        assertEquals(2, jsonObject.get("myMdci"));
+
+        assertEquals(2.1, jsonObject.get("myMdcd"));
+        assertEquals(2.2, jsonObject.get("myMdcf"));
+
+        ThreadContext.put("myMdcl", "1.1");
+        ThreadContext.put("myMdci", "2.1");
+        ThreadContext.put("myMdcd", "wrong");
+        ThreadContext.put("myMdcf", "wrong");
+
+        GelfTestSender.getMessages().clear();
+        logger.info(LOG_MESSAGE);
+        assertEquals(1, GelfTestSender.getMessages().size());
+
+        gelfMessage = GelfTestSender.getMessages().get(0);
+        jsonObject = JsonUtil.parseToMap(gelfMessage.toJson(""));
+
+        assertEquals(1, jsonObject.get("myMdcl"));
+        assertEquals(2, jsonObject.get("myMdci"));
+
+        assertNull(jsonObject.get("myMdcd"));
+        assertEquals(0.0, jsonObject.get("myMdcf"));
+
+        ThreadContext.put("myMdcl", "b");
+        ThreadContext.put("myMdci", "a");
+
+        GelfTestSender.getMessages().clear();
+        logger.info(LOG_MESSAGE);
+        assertEquals(1, GelfTestSender.getMessages().size());
+
+        gelfMessage = GelfTestSender.getMessages().get(0);
+        jsonObject = JsonUtil.parseToMap(gelfMessage.toJson(""));
+
+        assertNull(jsonObject.get("myMdcl"));
+        assertEquals(0, jsonObject.get("myMdci"));
     }
 }

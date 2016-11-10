@@ -1,6 +1,5 @@
 package biz.paluch.logging.gelf.jboss7;
 
-
 import java.util.Set;
 
 import org.jboss.logmanager.ExtLogRecord;
@@ -14,19 +13,18 @@ import biz.paluch.logging.gelf.Values;
 import biz.paluch.logging.gelf.jul.JulLogEvent;
 
 /**
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * @author Mark Paluch
  * @since 26.09.13 18:32
  */
 public class JBoss7JulLogEvent extends JulLogEvent {
 
     private ExtLogRecord extLogRecord;
-    
+
     public JBoss7JulLogEvent(ExtLogRecord logRecord) {
         super(logRecord);
         this.extLogRecord = logRecord;
     }
-    
-    
+
     @Override
     public Values getValues(MessageField field) {
         if (field instanceof MdcMessageField) {
@@ -49,8 +47,18 @@ public class JBoss7JulLogEvent extends JulLogEvent {
                     return ndc;
                 }
                 return null;
+            case SourceLineNumber:
+                return getSourceLineNumber();
         }
         return super.getValue(field);
+    }
+
+    private String getSourceLineNumber() {
+        if (this.extLogRecord.getSourceLineNumber() <= 0) {
+            return null;
+        }
+
+        return "" + this.extLogRecord.getSourceLineNumber();
     }
 
     private Values getMdcValues(DynamicMdcMessageField field) {

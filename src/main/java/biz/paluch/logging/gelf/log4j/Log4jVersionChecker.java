@@ -5,6 +5,9 @@ import java.lang.reflect.Method;
 
 import org.apache.log4j.spi.LoggingEvent;
 
+/**
+ * @author Mark Paluch
+ */
 class Log4jVersionChecker {
 
     private static Method methodGetTimeStamp = null;

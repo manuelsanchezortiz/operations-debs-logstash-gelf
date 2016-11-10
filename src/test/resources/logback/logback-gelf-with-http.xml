@@ -6,23 +6,23 @@
     <jmxConfigurator/>
 
     <appender name="GELF" class="biz.paluch.logging.gelf.logback.GelfLogbackAppender">
-        <graylogHost>test:localhost</graylogHost>
-        <graylogPort>12201</graylogPort>
+        <graylogHost>http://localhost:19393/foo/bar</graylogHost>
+        <graylogPort>19393</graylogPort>
         <facility>java-test</facility>
         <extractStackTrace>true</extractStackTrace>
         <filterStackTrace>true</filterStackTrace>
         <mdcProfiling>true</mdcProfiling>
         <timestampPattern>yyyy-MM-dd HH:mm:ss,SSSS</timestampPattern>
         <maximumMessageSize>8192</maximumMessageSize>
-        <additionalFields>fieldName1=fieldValue1,fieldName2=fieldValue2</additionalFields>
+        <additionalFields>fieldName1=fieldValue1,fieldName2=fieldValue2,myOriginHost=${HOSTNAME}</additionalFields>
         <mdcFields>mdcField1,mdcField2</mdcFields>
-        <dynamicMdcFields>myMdc.*,[a-z]+Field</dynamicMdcFields>
+        <originHost>1.2.3.4</originHost>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
         </filter>
     </appender>
 
     <root level="DEBUG">
-        <appender-ref ref="GELF" />
+        <appender-ref ref="GELF"/>
     </root>
 </configuration>

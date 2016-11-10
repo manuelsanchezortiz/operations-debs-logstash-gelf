@@ -11,6 +11,8 @@ import org.apache.logging.log4j.util.Strings;
 
 /**
  * Configuration for dynamic log fields pulled from MDC.
+ *
+ * @author Mark Paluch
  */
 @Plugin(name = "DynamicMdcFields", category = "Core", printObject = true)
 public class GelfDynamicMdcLogFields {

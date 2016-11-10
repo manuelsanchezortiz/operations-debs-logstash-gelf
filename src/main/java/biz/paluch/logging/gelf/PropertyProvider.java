@@ -3,7 +3,7 @@ package biz.paluch.logging.gelf;
 /**
  * Provides access to Log-Framework properties.
  * 
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * @author Mark Paluch
  * @since 26.09.13 15:04
  */
 public interface PropertyProvider {
@@ -29,10 +29,13 @@ public interface PropertyProvider {
     String PROPERTY_FACILITY = "facility";
     String PROPERTY_MAX_MESSAGE_SIZE = "maximumMessageSize";
     String PROPERTY_ADDITIONAL_FIELD = "additionalField.";
+    String PROPERTY_ADDITIONAL_FIELD_TYPE = "additionalFieldType.";
     String PROPERTY_ADDITIONAL_FIELDS = "additionalFields";
+    String PROPERTY_ADDITIONAL_FIELD_TYPES = "additionalFieldTypes";
 
     String PROPERTY_FILTER = "filter";
     String PROPERTY_LEVEL = "level";
+    String PROPERTY_VERSION = "version";
 
     String getProperty(String propertyName);
 }

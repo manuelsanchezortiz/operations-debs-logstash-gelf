@@ -2,28 +2,27 @@ package biz.paluch.logging.gelf.jul;
 
 import static biz.paluch.logging.gelf.LogMessageField.NamedLogField.*;
 
+import java.util.Collections;
 import java.util.logging.*;
 
 import biz.paluch.logging.RuntimeContainer;
 import biz.paluch.logging.gelf.GelfMessageAssembler;
 import biz.paluch.logging.gelf.LogMessageField;
 import biz.paluch.logging.gelf.PropertyProvider;
-import biz.paluch.logging.gelf.StaticMessageField;
 import biz.paluch.logging.gelf.intern.*;
 
 /**
  * Logging-Handler for GELF (Graylog Extended Logging Format). This Java-Util-Logging Handler creates GELF Messages and posts
  * them using UDP (default) or TCP. Following parameters are supported/needed:
- * <p/>
  * <ul>
  * <li>host (Mandatory): Hostname/IP-Address of the Logstash Host
  * <ul>
- * <li>tcp:(the host) for TCP, e.g. tcp:127.0.0.1 or tcp:some.host.com</li>
- * <li>udp:(the host) for UDP, e.g. udp:127.0.0.1 or udp:some.host.com</li>
  * <li>(the host) for UDP, e.g. 127.0.0.1 or some.host.com</li>
+ * <li>See docs for more details</li>
  * </ul>
  * </li>
  * <li>port (Optional): Port, default 12201</li>
+ * <li>version (Optional): GELF Version 1.0 or 1.1, default 1.0</li>
  * <li>originHost (Optional): Originating Hostname, default FQDN Hostname</li>
  * <li>extractStackTrace (Optional): Post Stack-Trace to StackTrace field, default false</li>
  * <li>filterStackTrace (Optional): Perform Stack-Trace filtering (true/false), default false</li>
@@ -34,11 +33,14 @@ import biz.paluch.logging.gelf.intern.*;
  * <li>filter (Optional): Class-Name of a Log-Filter, default none</li>
  * <li>additionalField.(number) (Optional): Post additional fields. Eg. .GelfLogHandler.additionalField.0=fieldName=Value</li>
  * </ul>
- * </p>
+ *
+ * The {@link #publish(LogRecord)} method is thread-safe and may be called by different threads at any time.
+ *
+ * @author Mark Paluch
  */
 public class GelfLogHandler extends Handler implements ErrorReporter {
 
-    protected GelfSender gelfSender;
+    protected volatile GelfSender gelfSender;
     protected GelfMessageAssembler gelfMessageAssembler;
 
     public GelfLogHandler() {
@@ -60,8 +62,13 @@ public class GelfLogHandler extends Handler implements ErrorReporter {
         }
 
         final String additionalFields = propertyProvider.getProperty(PropertyProvider.PROPERTY_ADDITIONAL_FIELDS);
-        if (null != level) {
+        if (null != additionalFields) {
             setAdditionalFields(additionalFields);
+        }
+
+        final String additionalFieldTypes = propertyProvider.getProperty(PropertyProvider.PROPERTY_ADDITIONAL_FIELD_TYPES);
+        if (null != additionalFieldTypes) {
+            setAdditionalFieldTypes(additionalFieldTypes);
         }
 
         final String filter = propertyProvider.getProperty(PropertyProvider.PROPERTY_FILTER);
@@ -93,9 +100,14 @@ public class GelfLogHandler extends Handler implements ErrorReporter {
         if (!isLoggable(record)) {
             return;
         }
+
         try {
             if (null == gelfSender) {
-                gelfSender = GelfSenderFactory.createSender(gelfMessageAssembler, this);
+                synchronized (this) {
+                    if (null == gelfSender) {
+                        gelfSender = createGelfSender();
+                    }
+                }
             }
         } catch (Exception e) {
             reportError("Could not send GELF message: " + e.getMessage(), e, ErrorManager.OPEN_FAILURE);
@@ -117,6 +129,10 @@ public class GelfLogHandler extends Handler implements ErrorReporter {
         }
     }
 
+    protected GelfSender createGelfSender() {
+        return GelfSenderFactory.createSender(gelfMessageAssembler, this, Collections.EMPTY_MAP);
+    }
+
     @Override
     public void reportError(String message, Exception e) {
         reportError(message, e, ErrorManager.GENERIC_FAILURE);
@@ -134,16 +150,20 @@ public class GelfLogHandler extends Handler implements ErrorReporter {
         return gelfMessageAssembler.createGelfMessage(new JulLogEvent(record));
     }
 
-    public void setAdditionalFields(String fieldSpec) {
+    public void setAdditionalFields(String spec) {
+        ConfigurationSupport.setAdditionalFields(spec, gelfMessageAssembler);
+    }
 
-        String[] properties = fieldSpec.split(",");
+    public void setAdditionalFieldTypes(String spec) {
+        ConfigurationSupport.setAdditionalFieldTypes(spec, gelfMessageAssembler);
+    }
 
-        for (String field : properties) {
-            final int index = field.indexOf('=');
-            if (-1 != index) {
-                gelfMessageAssembler.addField(new StaticMessageField(field.substring(0, index), field.substring(index + 1)));
-            }
-        }
+    public void setMdcFields(String spec) {
+        ConfigurationSupport.setMdcFields(spec, gelfMessageAssembler);
+    }
+
+    public void setDynamicMdcFields(String spec) {
+        ConfigurationSupport.setDynamicMdcFields(spec, gelfMessageAssembler);
     }
 
     public String getGraylogHost() {
@@ -224,5 +244,13 @@ public class GelfLogHandler extends Handler implements ErrorReporter {
 
     public void setMaximumMessageSize(int maximumMessageSize) {
         gelfMessageAssembler.setMaximumMessageSize(maximumMessageSize);
+    }
+
+    public String getVersion() {
+        return gelfMessageAssembler.getVersion();
+    }
+
+    public void setVersion(String version) {
+        gelfMessageAssembler.setVersion(version);
     }
 }

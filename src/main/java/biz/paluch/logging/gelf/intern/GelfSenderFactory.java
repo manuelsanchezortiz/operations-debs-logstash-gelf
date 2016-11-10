@@ -1,18 +1,23 @@
 package biz.paluch.logging.gelf.intern;
 
-import biz.paluch.logging.gelf.intern.sender.DefaultGelfSenderProvider;
-import biz.paluch.logging.gelf.intern.sender.RedisGelfSenderProvider;
-
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 
+import biz.paluch.logging.gelf.intern.sender.DefaultGelfSenderProvider;
+import biz.paluch.logging.gelf.intern.sender.RedisGelfSenderProvider;
+
 /**
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * Factory to create a {@link GelfSender} based on the host and protocol details. This factory uses Java's {@link ServiceLoader}
+ * mechanism to discover classes implementing {@link GelfSenderProvider}.
+ * 
+ * @author Mark Paluch
+ * @author Aleksandar Stojadinovic
  * @since 26.09.13 15:12
  */
 public final class GelfSenderFactory {
@@ -20,10 +25,13 @@ public final class GelfSenderFactory {
     /**
      * Create a GelfSender based on the configuration.
      * 
-     * @param hostAndPortProvider
-     * @return GelfSender.
+     * @param hostAndPortProvider the host and port
+     * @param errorReporter the error reporter
+     * @param senderSpecificConfigurations configuration map
+     * @return a new {@link GelfSender} instance
      */
-    public static GelfSender createSender(final HostAndPortProvider hostAndPortProvider, final ErrorReporter errorReporter) {
+    public static GelfSender createSender(final HostAndPortProvider hostAndPortProvider, final ErrorReporter errorReporter,
+            final Map<String, Object> senderSpecificConfigurations) {
         GelfSenderConfiguration senderConfiguration = new GelfSenderConfiguration() {
 
             @Override
@@ -40,6 +48,12 @@ public final class GelfSenderFactory {
             public ErrorReporter getErrorReporter() {
                 return errorReporter;
             }
+
+            @Override
+            public Map<String, Object> getSpecificConfigurations() {
+                return senderSpecificConfigurations;
+            }
+
         };
 
         return createSender(senderConfiguration);
@@ -48,16 +62,17 @@ public final class GelfSenderFactory {
     /**
      * Create a GelfSender based on the configuration.
      * 
-     * @param senderConfiguration
-     * @return GelfSender.
+     * @param senderConfiguration the configuration
+     * @return a new {@link GelfSender} instance
      */
     public static GelfSender createSender(GelfSenderConfiguration senderConfiguration) {
+
         ErrorReporter errorReporter = senderConfiguration.getErrorReporter();
         if (senderConfiguration.getHost() == null) {
             senderConfiguration.getErrorReporter().reportError("GELF server hostname is empty!", null);
         } else {
-            try {
 
+            try {
                 for (GelfSenderProvider provider : SenderProviderHolder.getSenderProvider()) {
                     if (provider.supports(senderConfiguration.getHost())) {
                         return provider.create(senderConfiguration);
@@ -92,6 +107,7 @@ public final class GelfSenderFactory {
 
     // For thread safe lazy intialization of provider list
     private static class SenderProviderHolder {
+
         private static ServiceLoader<GelfSenderProvider> gelfSenderProvider = ServiceLoader.load(GelfSenderProvider.class);
         private static List<GelfSenderProvider> providerList = new ArrayList<GelfSenderProvider>();
         private static List<GelfSenderProvider> addedProviders = new ArrayList<GelfSenderProvider>();
@@ -132,5 +148,4 @@ public final class GelfSenderFactory {
             }
         }
     }
-
 }

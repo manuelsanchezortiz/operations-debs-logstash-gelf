@@ -5,17 +5,19 @@ import java.io.IOException;
 import java.net.Socket;
 
 /**
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * Internal helper to silently close resources.
+ *
+ * @author Mark Paluch
  * @since 17.07.14 10:45
  */
 public class Closer {
 
     /**
      * Close silently the closeable.
-     * 
-     * @param closeable
+     *
+     * @param closeable the closeable
      */
-    public final static void close(Closeable closeable) {
+    public static final void close(Closeable closeable) {
         try {
             if (closeable != null) {
                 closeable.close();
@@ -27,10 +29,10 @@ public class Closer {
 
     /**
      * Close silently the socket.
-     * 
-     * @param socket
+     *
+     * @param socket the socket
      */
-    public final static void close(Socket socket) {
+    public static final void close(Socket socket) {
         try {
             if (socket != null) {
                 socket.close();

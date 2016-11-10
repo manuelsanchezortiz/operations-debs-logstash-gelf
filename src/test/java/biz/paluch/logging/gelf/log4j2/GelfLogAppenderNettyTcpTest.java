@@ -1,6 +1,5 @@
 package biz.paluch.logging.gelf.log4j2;
 
-import static org.junit.Assert.assertEquals;
 import biz.paluch.logging.RuntimeContainer;
 import biz.paluch.logging.gelf.GelfTestSender;
 import biz.paluch.logging.gelf.NettyLocalServer;
@@ -15,16 +14,19 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.ConfigurationFactory;
-import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
+import static org.junit.Assert.assertEquals;
+
 /**
+ * @author Mark Paluch
  */
 public class GelfLogAppenderNettyTcpTest {
     public static final String LOG_MESSAGE = "foo bar test log message";
@@ -35,7 +37,7 @@ public class GelfLogAppenderNettyTcpTest {
 
     @BeforeClass
     public static void setupClass() throws Exception {
-        System.setProperty(ConfigurationFactory.CONFIGURATION_FILE_PROPERTY, "log4j2-netty-tcp.xml");
+        System.setProperty(ConfigurationFactory.CONFIGURATION_FILE_PROPERTY, "log4j2/log4j2-netty-tcp.xml");
         loggerContext = (LoggerContext) LogManager.getContext(false);
         loggerContext.reconfigure();
         server.run();
@@ -68,7 +70,7 @@ public class GelfLogAppenderNettyTcpTest {
         List jsonValues = server.getJsonValues();
         assertEquals(1, jsonValues.size());
 
-        JSONObject jsonValue = (JSONObject) jsonValues.get(0);
+        Map<String, Object> jsonValue = (Map<String, Object>) jsonValues.get(0);
 
         assertEquals(RuntimeContainer.FQDN_HOSTNAME, jsonValue.get(GelfMessage.FIELD_HOST));
         assertEquals(RuntimeContainer.HOSTNAME, jsonValue.get("_server.simple"));
@@ -88,6 +90,7 @@ public class GelfLogAppenderNettyTcpTest {
         assertEquals("logstash-gelf", jsonValue.get(GelfMessage.FIELD_FACILITY));
         assertEquals("fieldValue1", jsonValue.get("_fieldName1"));
         assertEquals("fieldValue2", jsonValue.get("_fieldName2"));
+        assertEquals(GelfMessage.DEFAULT_FACILITY, jsonValue.get("facility"));
 
     }
 

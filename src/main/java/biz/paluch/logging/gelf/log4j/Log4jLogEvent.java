@@ -1,5 +1,16 @@
 package biz.paluch.logging.gelf.log4j;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.MDC;
+import org.apache.log4j.NDC;
+import org.apache.log4j.spi.LocationInfo;
+import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.ThrowableInformation;
+
 import biz.paluch.logging.gelf.DynamicMdcMessageField;
 import biz.paluch.logging.gelf.GelfUtil;
 import biz.paluch.logging.gelf.LogEvent;
@@ -7,17 +18,10 @@ import biz.paluch.logging.gelf.LogMessageField;
 import biz.paluch.logging.gelf.MdcMessageField;
 import biz.paluch.logging.gelf.MessageField;
 import biz.paluch.logging.gelf.Values;
-import org.apache.log4j.Level;
-import org.apache.log4j.MDC;
-import org.apache.log4j.NDC;
-import org.apache.log4j.spi.LoggingEvent;
-import org.apache.log4j.spi.ThrowableInformation;
-
-import java.util.HashSet;
-import java.util.Set;
+import biz.paluch.logging.gelf.intern.GelfMessage;
 
 /**
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * @author Mark Paluch
  * @since 26.09.13 15:37
  */
 class Log4jLogEvent implements LogEvent {
@@ -59,21 +63,31 @@ class Log4jLogEvent implements LogEvent {
     }
 
     private int levelToSyslogLevel(final Level level) {
-        final int syslogLevel;
-
-        switch (level.toInt()) {
-            case Level.FATAL_INT:
-                return 2;
-            case Level.ERROR_INT:
-                return 3;
-            case Level.WARN_INT:
-                return 4;
-            case Level.INFO_INT:
-                return 6;
-            default:
-                return 7;
-
+        if (level.toInt() <= Level.DEBUG.toInt()) {
+            return GelfMessage.DEFAUL_LEVEL;
         }
+
+        if (level.toInt() <= Level.INFO.toInt()) {
+            return 6;
+        }
+
+        if (level.toInt() <= Level.WARN.toInt()) {
+            return 4;
+        }
+
+        if (level.toInt() <= Level.ERROR.toInt()) {
+            return 3;
+        }
+
+        if (level.toInt() <= Level.FATAL.toInt()) {
+            return 2;
+        }
+
+        if (level.toInt() > Level.FATAL.toInt()) {
+            return 0;
+        }
+
+        return GelfMessage.DEFAUL_LEVEL;
     }
 
     @Override
@@ -101,11 +115,17 @@ class Log4jLogEvent implements LogEvent {
             case ThreadName:
                 return loggingEvent.getThreadName();
             case SourceClassName:
-                return loggingEvent.getLocationInformation().getClassName();
+                return getSourceClassName();
+            case SourceLineNumber:
+                return getSourceLineNumber();
             case SourceMethodName:
-                return loggingEvent.getLocationInformation().getMethodName();
+                return getSourceMethodName();
             case SourceSimpleClassName:
-                return GelfUtil.getSimpleClassName(loggingEvent.getLocationInformation().getClassName());
+                String sourceClassName = getSourceClassName();
+                if(sourceClassName == null){
+                    return null;
+                }
+                return GelfUtil.getSimpleClassName(sourceClassName);
             case LoggerName:
                 return loggingEvent.getLoggerName();
             case NDC:
@@ -117,6 +137,30 @@ class Log4jLogEvent implements LogEvent {
         }
 
         throw new UnsupportedOperationException("Cannot provide value for " + field);
+    }
+
+    private String getSourceMethodName() {
+        String methodName = loggingEvent.getLocationInformation().getMethodName();
+        if(LocationInfo.NA.equals(methodName)){
+            return null;
+        }
+        return methodName;
+    }
+
+    private String getSourceLineNumber() {
+        String lineNumber = loggingEvent.getLocationInformation().getLineNumber();
+        if(LocationInfo.NA.equals(lineNumber)){
+            return null;
+        }
+        return lineNumber;
+    }
+
+    private String getSourceClassName() {
+        String className = loggingEvent.getLocationInformation().getClassName();
+        if(LocationInfo.NA.equals(className)){
+            return null;
+        }
+        return className;
     }
 
     private String getValue(MdcMessageField field) {
@@ -151,8 +195,10 @@ class Log4jLogEvent implements LogEvent {
 
     private Set<String> getAllMdcNames() {
         Set<String> mdcNames = new HashSet<String>();
-
-        mdcNames.addAll(MDC.getContext().keySet());
+        Map context = MDC.getContext();
+        if (context != null) {
+            mdcNames.addAll(context.keySet());
+        }
         return mdcNames;
     }
 
@@ -161,9 +207,7 @@ class Log4jLogEvent implements LogEvent {
 
         for (String mdcName : mdcNames) {
             if (field.getPattern().matcher(mdcName).matches()) {
-
                 matchingMdcNames.add(mdcName);
-
             }
         }
         return matchingMdcNames;

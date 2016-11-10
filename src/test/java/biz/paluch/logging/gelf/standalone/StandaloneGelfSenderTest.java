@@ -9,6 +9,9 @@ import biz.paluch.logging.gelf.intern.GelfSenderFactory;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * @author Mark Paluch
+ */
 public class StandaloneGelfSenderTest {
 
     @Before

@@ -1,5 +1,9 @@
 package biz.paluch.logging.gelf.log4j2;
 
+import biz.paluch.logging.RuntimeContainer;
+import biz.paluch.logging.gelf.GelfTestSender;
+import biz.paluch.logging.gelf.GelfUtil;
+import biz.paluch.logging.gelf.intern.GelfMessage;
 import static org.junit.Assert.*;
 
 import org.apache.logging.log4j.LogManager;
@@ -11,17 +15,14 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
-import biz.paluch.logging.RuntimeContainer;
-import biz.paluch.logging.gelf.GelfTestSender;
-import biz.paluch.logging.gelf.GelfUtil;
-import biz.paluch.logging.gelf.intern.GelfMessage;
-
 /**
+ * @author Mark Paluch
  */
 public class GelfLogAppenderTest {
+
     public static final String LOG_MESSAGE = "foo bar test log message";
     public static final String EXPECTED_LOG_MESSAGE = LOG_MESSAGE;
-    public static final String CONFIG_XML = "log4j2.xml";
+    public static final String CONFIG_XML = "log4j2/log4j2.xml";
 
     private static LoggerContext loggerContext;
 
@@ -65,6 +66,7 @@ public class GelfLogAppenderTest {
         GelfMessage gelfMessage = GelfTestSender.getMessages().get(0);
         assertEquals(EXPECTED_LOG_MESSAGE, gelfMessage.getFullMessage());
         assertEquals(EXPECTED_LOG_MESSAGE, gelfMessage.getShortMessage());
+        assertEquals(GelfMessage.GELF_VERSION_1_1, gelfMessage.getVersion());
         assertEquals("6", gelfMessage.getLevel());
         assertEquals(8192, gelfMessage.getMaximumMessageSize());
 
@@ -80,7 +82,7 @@ public class GelfLogAppenderTest {
     @Test
     public void testFqdnHost() throws Exception {
 
-        reconfigure("log4j2-origin-host-fqdn.xml");
+        reconfigure("log4j2/log4j2-origin-host-fqdn.xml");
         Logger logger = loggerContext.getLogger(getClass().getName());
 
         logger.info(LOG_MESSAGE);
@@ -93,7 +95,7 @@ public class GelfLogAppenderTest {
     @Test
     public void testSimpleHost() throws Exception {
 
-        reconfigure("log4j2-origin-host-simple.xml");
+        reconfigure("log4j2/log4j2-origin-host-simple.xml");
         Logger logger = loggerContext.getLogger(getClass().getName());
 
         logger.info(LOG_MESSAGE);
@@ -106,7 +108,7 @@ public class GelfLogAppenderTest {
     @Test
     public void testCustomHost() throws Exception {
 
-        reconfigure("log4j2-origin-host-custom.xml");
+        reconfigure("log4j2/log4j2-origin-host-custom.xml");
         Logger logger = loggerContext.getLogger(getClass().getName());
 
         logger.info(LOG_MESSAGE);
@@ -114,6 +116,19 @@ public class GelfLogAppenderTest {
 
         GelfMessage gelfMessage = GelfTestSender.getMessages().get(0);
         assertEquals("my.custom.host", gelfMessage.getHost());
+    }
+
+    @Test
+    public void testEmptyFacility() throws Exception {
+
+        reconfigure("log4j2/log4j2-empty-facility.xml");
+        Logger logger = loggerContext.getLogger(getClass().getName());
+
+        logger.info(LOG_MESSAGE);
+        assertEquals(1, GelfTestSender.getMessages().size());
+
+        GelfMessage gelfMessage = GelfTestSender.getMessages().get(0);
+        assertEquals("", gelfMessage.getFacility());
     }
 
     @Test
@@ -175,24 +190,60 @@ public class GelfLogAppenderTest {
     @Test
     public void testFactory() throws Exception {
         GelfLogAppender result = GelfLogAppender.createAppender(null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, false);
 
         assertNull(result);
 
         result = GelfLogAppender.createAppender(null, "name", null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null);
+                null, null, null, null, null, true);
 
         assertNull(result);
 
         result = GelfLogAppender.createAppender(null, "name", null, null, null, null, "host", null, null, null, null, null,
-                null, null, null, null);
+                null, null, null, null, null, null, false);
 
         assertNotNull(result);
 
         result = GelfLogAppender.createAppender(null, "name", null, null, null, null, "host", null, null, null, null, null,
-                "facility", null, null, null);
+                null, "facility", null, null, null, null, false);
 
         assertNotNull(result);
+    }
 
+    @Test
+    public void testNullMessageAndExceptionFallback() throws Exception {
+        Logger logger = loggerContext.getLogger(getClass().getName());
+
+        logger.info((String) null, new IllegalStateException());
+
+        assertEquals(1, GelfTestSender.getMessages().size());
+
+        GelfMessage gelfMessage = GelfTestSender.getMessages().get(0);
+
+        assertEquals("java.lang.IllegalStateException", gelfMessage.getFullMessage());
+        assertEquals("java.lang.IllegalStateException", gelfMessage.getShortMessage());
+    }
+
+    @Test
+    public void testEmptyMessageAndExceptionFallback() throws Exception {
+        Logger logger = loggerContext.getLogger(getClass().getName());
+
+        logger.info("", new IllegalStateException("Help!"));
+
+        assertEquals(1, GelfTestSender.getMessages().size());
+
+        GelfMessage gelfMessage = GelfTestSender.getMessages().get(0);
+
+        assertEquals("java.lang.IllegalStateException: Help!", gelfMessage.getFullMessage());
+        assertEquals("java.lang.IllegalStateException: Help!", gelfMessage.getShortMessage());
+    }
+
+    @Test
+    public void testEmptyMessage() throws Exception {
+        Logger logger = loggerContext.getLogger(getClass().getName());
+
+        logger.info("");
+
+        assertEquals(0, GelfTestSender.getMessages().size());
     }
 }

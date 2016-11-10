@@ -3,12 +3,15 @@ Introduction [![Build Status](https://snap-ci.com/mp911de/logstash-gelf/branch/m
 
 ${project.name} (${project.artifactId})
 
-Provides logging to logstash using the Graylog Extended Logging Format (GELF). This implementation comes with support for three areas:
+Provides logging to logstash using the Graylog Extended Logging Format (GELF) 1.0 and 1.1. Following log frameworks/integrations are supported:
 
 * [Java Util Logging](examples/jul.html)
 * [log4j 1.2.x](examples/log4j-1.2.x.html)
+* [log4j 1.2.x JSON Layout](examples/log4j-1.2.x-json.html)
 * [log4j 2.x](examples/log4j-2.x.html)
-* [JBoss 7/Wildfly](examples/jbossas7.html)
+* [JBoss 7](examples/jbossas7.html)
+* [WildFly 8/WildFly 9/WildFly 10](examples/wildfly.html)
+* [WildFly 8/WildFly 9/WildFly 10 JSON Formatter](examples/wildfly-json.html)
 * [Logback](examples/logback.html)
 
 How to get
@@ -17,22 +20,21 @@ How to get
 Maven:
 
     <dependency>
-        <groupId>biz.paluch.logging</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>${project.artifactId}</artifactId>
         <version>${logstash-gelf-release-version}</version>
     </dependency>
+    
+Direct download from [Maven Central](http://search.maven.org/remotecontent?filepath=biz/paluch/logging/${project.artifactId}/${logstash-gelf-release-version}/${project.artifactId}-${logstash-gelf-release-version}.jar)    
 
-or http://search.maven.org/remotecontent?filepath=biz/paluch/logging/${project.artifactId}/${logstash-gelf-release-version}/${project.artifactId}-${logstash-gelf-release-version}.jar
 
-JBoss Module Download:
+JBoss AS/WildFly Module Download:
 
     <dependency>
-        <groupId>biz.paluch.logging</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>${project.artifactId}</artifactId>
         <version>${logstash-gelf-release-version}</version>
         <classifier>logging-module</classifier>
     </dependency>
 
-or http://search.maven.org/remotecontent?filepath=biz/paluch/logging/${project.artifactId}/${logstash-gelf-release-version}/${project.artifactId}-${logstash-gelf-release-version}-logging-module.zip
-
-
+Direct download from [Maven Central](http://search.maven.org/remotecontent?filepath=biz/paluch/logging/${project.artifactId}/${logstash-gelf-release-version}/${project.artifactId}-${logstash-gelf-release-version}-logging-module.zip)

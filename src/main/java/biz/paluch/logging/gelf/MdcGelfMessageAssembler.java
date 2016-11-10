@@ -1,13 +1,13 @@
 package biz.paluch.logging.gelf;
 
-import biz.paluch.logging.gelf.intern.GelfMessage;
-
 import java.util.Set;
+
+import biz.paluch.logging.gelf.intern.GelfMessage;
 
 /**
  * Message-Assembler using MDC.
  * 
- * @author <a href="mailto:mpaluch@paluch.biz">Mark Paluch</a>
+ * @author Mark Paluch
  * @since 26.09.13 15:05
  */
 public class MdcGelfMessageAssembler extends GelfMessageAssembler {
@@ -41,7 +41,6 @@ public class MdcGelfMessageAssembler extends GelfMessageAssembler {
 
                 if (mdcName == null) {
                     continue;
-
                 }
 
                 String mdcValue = logEvent.getMdcValue(mdcName);
